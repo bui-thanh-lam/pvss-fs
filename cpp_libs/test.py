@@ -1,7 +1,10 @@
 import ctypes
 import sys
 import os
-# os.add_dll_directory(os.path.realpath(__file__))
+import ctypes.util
+
+os.add_dll_directory(os.getcwd())
+os.add_dll_directory(os.path.realpath(__file__))
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 handle = ctypes.CDLL(dir_path + "\libTest.so")
