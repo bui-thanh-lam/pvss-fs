@@ -30,7 +30,6 @@ int witness(mpz_t a, mpz_t n)
     mpz_init(n_1);
     mpz_sub_ui(n_1, n, 1);
 
-    
     mpz_t u;
     mpz_init(u);
     unsigned long t = 0;
@@ -104,11 +103,11 @@ int checkPrime(mpz_t n)
     }
 }
 
-void makePrime(mpz_t n, int bits)
+void generateRandomPrime(mpz_t n, int bits)
 {
     generateRandomBits(n, bits);
     mpz_setbit(n, 0);
-    mpz_setbit(n, bits-1);
+    mpz_setbit(n, bits - 1);
     while (checkPrime(n) == 1)
     {
         mpz_add_ui(n, n, 2);
@@ -138,7 +137,6 @@ void generateFirst400Prime()
         first400Prime[index] = number;
         index += 1;
     }
-
 }
 
 void init()
@@ -157,7 +155,7 @@ int main()
     {
         i++;
         mpz_t n;
-        makePrime(n, 3072);
+        generateRandomPrime(n, 3072);
     }
     clock_t end = clock();
     cout << (end - start) << endl;
