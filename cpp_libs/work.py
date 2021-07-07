@@ -26,7 +26,6 @@ def divide(x, y):
     quot = _divide(x, y, rem)
     return quot, rem.value
 
-
 # void avg(double *, int n)
 # Define a special type for the 'double *' argument
 class DoubleArrayType:
@@ -65,7 +64,8 @@ class DoubleArrayType:
 
 DoubleArray = DoubleArrayType()
 _avg = _mod.avg
-_avg.argtypes = (DoubleArray, ctypes.c_int)
+# _avg.argtypes = (DoubleArray, ctypes.c_int)
+_avg.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.c_int)
 _avg.restype = ctypes.c_double
 
 
@@ -86,18 +86,37 @@ distance.restype = ctypes.c_double
 
 # int printHello()
 printHello = _mod.printHello
+printHello = (ctypes.c_char_p)
 printHello.restype = ctypes.c_void_p
 
 # int funtionTestGmp()
 functionTestGmp = _mod.functionTestGmp
-functionTestGmp.restype = ctypes.c_int
+functionTestGmp.restype = ctypes.c_void_p
+
+# void printString(char *s)
+printString = _mod.printString
+printString.restype = ctypes.c_void_p
+
+# void printStringArray(char **s, int n)
+printStringArray = _mod.printStringArray
+printStringArray.argtypes = (ctypes.POINTER(ctypes.c_char_p), ctypes.c_int)
+printStringArray.restype = ctypes.c_void_p
 
 print("gcd: ",gcd(35,42))
 print("divide: ", divide(5,2))
-print("avg: ", avg([1, 2, 3]))
+# print("avg: ", avg([1, 2, 3]))
+double_array = (ctypes.c_double * 4)(1,2,3,4)
+print("avg: ", avg(double_array))
 p1 = Point(1, 2)
 p2 = Point(4, 5)
 print("distance: ", distance(p1, p2))
 printHello()
-print(functionTestGmp())
+functionTestGmp()
+
+printString("alô".encode("utf-8"))
+
+stringArray = (ctypes.c_char_p * 4)("một".encode("utf-8"), "hai".encode("utf-8"), "ba".encode("utf-8"), "bốn".encode("utf-8"))
+printStringArray(stringArray, 4)
+
+
 

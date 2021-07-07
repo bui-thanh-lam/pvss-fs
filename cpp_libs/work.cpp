@@ -2,6 +2,8 @@
 #include <bits/stdc++.h>
 #include "gmp.h"
 
+// g++ -fPIC -shared -o work_libsample.so work.cpp  -lgmp
+
 using namespace std;
 
 void _printHello(){
@@ -47,7 +49,7 @@ double _distance(Point * p1, Point * p2)
 	return hypot(p1->x - p2->x, p1->y - p2->y);
 }
 
-int _functionTestGmp()
+void _functionTestGmp()
 {
     mpz_t n, a, a_pow2, x, p, q, check;
 
@@ -78,11 +80,19 @@ int _functionTestGmp()
     gmp_printf("%Zd\n", p);
     gmp_printf("%Zd\n", q);
     cout << "thoa man p*q = n sau " << i << " buoc lap" << endl;
-    return 0;
 }
 
+void _printString(string s){
+    cout<<"String: "<<s<<endl;
+}
+
+void _printStringArray(string array[], int n){
+    for(int i = 0; i < n; i++){
+        cout<<"string "<<i<<": "<<array[i]<<endl;
+    }
+}
 extern "C"{
-    int printHello(){
+    void printHello(){
         _printHello();
     }
     int gcd(int x, int y){
@@ -91,13 +101,25 @@ extern "C"{
     int divide(int a, int b, int *remainder){
         return _divide(a,b,remainder);
     }
-    double avg(double *a, int n){
+    double avg(double *a,int n){
         return _avg(a, n);
     }
     double distance(Point * p1, Point * p2){
         return _distance(p1, p2);
     }
-    int functionTestGmp(){
-        return _functionTestGmp();
+    void functionTestGmp(){
+        _functionTestGmp();
+    }
+    void printString(char *s){
+        string str(s);
+        _printString(str);
+    }
+    void printStringArray(char **s, int n){
+        string *array = new string[n];
+        for(int i = 0; i < n; i++){
+            string str(s[i]);
+            array[i] = str;
+        }
+        _printStringArray(array, n);
     }
 }
