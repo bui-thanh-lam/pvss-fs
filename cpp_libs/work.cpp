@@ -91,6 +91,8 @@ void _printStringArray(string array[], int n){
         cout<<"string "<<i<<": "<<array[i]<<endl;
     }
 }
+
+
 extern "C"{
     void printHello(){
         _printHello();
