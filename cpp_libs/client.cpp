@@ -1,5 +1,3 @@
-// g++ -fPIC -shared -o Client_Lib.so Client.cpp
-
 #include <iostream>
 #include <string.h>
 using namespace std;
@@ -271,7 +269,7 @@ unsigned char* CTR_encrypt(char *inputFilePath, char *outputFilePath)
 
     unsigned char *key;
     key = generateRandomBytes(16);
-
+    //read file
     FILE *fp = fopen(inputFilePath, "rb");
     fseek(fp, 0, SEEK_END);
     unsigned int n = ftell(fp);
@@ -300,27 +298,26 @@ unsigned char* CTR_encrypt(char *inputFilePath, char *outputFilePath)
             plainText[i + j] ^= IV[j];
         }
     }
+    //write file
     fp = fopen(outputFilePath, "wb");
-    fwrite((unsigned char *)nonce, 1, 8, fp);
-    fwrite((unsigned char *)plainText, 1, totalLength, fp);
-    fclose(fp);
-    delete[] plainText;
-    delete[] expanded_key;
-    delete[] IV;
-    delete[] nonce;
+	fwrite((unsigned char *)nonce, 1, 8, fp);
+	fwrite((unsigned char *)plainText, 1, totalLength, fp);
+	fclose(fp);
+	delete[] plainText;
+	delete[] expanded_key;
+	delete[] IV;
+	delete[] nonce;
     return key;
 }
 
-void CTR_decrypt(char *inputFilePath, char *outputFilePath, char *keyFilePath)
+void CTR_decrypt(char *inputFilePath, char *outputFilePath, unsigned char* key)
 {
-    unsigned char *key = new unsigned char[16];
+    //init
     unsigned char *IV = new unsigned char[16];
     unsigned char *nonce = new unsigned char[8];
     uint64_t ctr = 0;
-    FILE *fp = fopen(keyFilePath, "rb+");
-    fread((unsigned char *)key, 1, 16, fp);
-    fclose(fp);
-    fp = fopen(inputFilePath, "rb");
+    //read file
+    FILE *fp = fopen(inputFilePath, "rb");
     fseek(fp, 0, SEEK_END);
     unsigned int n = ftell(fp);
     n = n - 8;
@@ -343,16 +340,71 @@ void CTR_decrypt(char *inputFilePath, char *outputFilePath, char *keyFilePath)
             cipherText[i + j] ^= IV[j];
         }
     }
+    //write file
     int paddingValue = (int)cipherText[n - 1];
-    fp = fopen(outputFilePath, "wb");
-    fwrite((unsigned char *)cipherText, 1, n - paddingValue, fp);
-    fclose(fp);
-    delete[] cipherText;
-    delete[] key;
-    delete[] expanded_key;
-    delete[] IV;
-    delete[] nonce;
+	fp = fopen(outputFilePath, "wb");
+	fwrite((unsigned char *)cipherText, 1, n - paddingValue, fp);
+	fclose(fp);
+	delete[] cipherText;
+	delete[] key;
+	delete[] expanded_key;
+	delete[] IV;
+	delete[] nonce;
+
 }
+
+void stream2hex(const string str, string &hexstr, bool capital = true)
+{
+    hexstr.resize(str.size() * 2);
+    const size_t a = capital ? 'A' - 1 : 'a' - 1;
+
+    for (size_t i = 0, c = str[0] & 0xFF; i < hexstr.size(); c = str[i / 2] & 0xFF)
+    {
+        hexstr[i++] = c > 0x9F ? (c / 16 - 9) | a : c / 16 | '0';
+        hexstr[i++] = (c & 0xF) > 9 ? (c % 16 - 9) | a : c % 16 | '0';
+    }
+}
+
+// Convert string of hex numbers to its equivalent char-stream
+void hex2stream(const string hexstr, string &str)
+{
+    str.resize((hexstr.size() + 1) / 2);
+
+    for (size_t i = 0, j = 0; i < str.size(); i++, j++)
+    {
+        str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
+        str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+    }
+}
+
+// g++ -fPIC -shared -o Client_Lib.so Client.cpp
+extern "C"
+{
+    char* Encrypt_File(char *input, char *output)
+    {
+        unsigned char *key_uc = CTR_encrypt(input, output);
+        string key_str(reinterpret_cast<char*>(key_uc));
+        stream2hex(key_str, key_str);
+        char* key_c = new char[key_str.length()];
+//        char* result = &key_str[0];
+        for(int i = 0; i< key_str.length(); i++){
+            key_c[i] = key_str[i];
+        }
+        delete[] key_uc;
+        return key_c;
+    }
+    void Decrypt_File(char* input, char* output, char* key_c)
+    {
+        string key_str(key_c);
+        hex2stream(key_str, key_str);
+        unsigned char* key_uc = new unsigned char[key_str.length()];
+        for(int i = 0; i < key_str.length(); i++){
+            key_uc[i] = key_str[i];
+        }
+        CTR_decrypt(input, output, key_uc);
+    }
+}
+
 // int main()
 // {
 // 	unsigned char msg[] = "This is an encrypted message.";
@@ -387,68 +439,3 @@ void CTR_decrypt(char *inputFilePath, char *outputFilePath, char *keyFilePath)
 // 	delete[] padded_msg;
 // 	return 0;
 // }
-void stream2hex(const string str, string &hexstr, bool capital = true)
-{
-    hexstr.resize(str.size() * 2);
-    const size_t a = capital ? 'A' - 1 : 'a' - 1;
-
-    for (size_t i = 0, c = str[0] & 0xFF; i < hexstr.size(); c = str[i / 2] & 0xFF)
-    {
-        hexstr[i++] = c > 0x9F ? (c / 16 - 9) | a : c / 16 | '0';
-        hexstr[i++] = (c & 0xF) > 9 ? (c % 16 - 9) | a : c % 16 | '0';
-    }
-}
-
-// Convert string of hex numbers to its equivalent char-stream
-void hex2stream(const string hexstr, string &str)
-{
-    str.resize((hexstr.size() + 1) / 2);
-
-    for (size_t i = 0, j = 0; i < str.size(); i++, j++)
-    {
-        str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
-        str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
-    }
-}
-// int main()
-// {
-// 	clock_t start, end;
-
-// 	char *inputFilePath = (char *)"test.txt";
-// 	char *outputFilePath = (char *)"outputFilePath.txt";
-// 	char *keyFilePath = (char *)"keyFilePath.txt";
-// 	char *decryptFilePath = (char *)"decryptFilePath.txt";
-
-// 	//CTR mode
-// 	start = clock();
-// 	CTR_encrypt(inputFilePath, outputFilePath, keyFilePath, false);
-// 	end = clock();
-// 	cout << "encrypt time: " << (end - start) << endl;
-// 	start = clock();
-// 	CTR_decrypt(outputFilePath, decryptFilePath, keyFilePath);
-// 	end = clock();
-// 	cout << "decrypt time: " << (end - start) << endl;
-// 	// string s = "Hello World";
-// 	// stream2hex(s,s);
-// 	// cout<<s<<endl;
-// 	// hex2stream(s,s);
-// 	// cout<<s<<endl;
-
-// 	system("pause");
-// 	return 0;
-// }
-extern "C"
-{
-    const char* Encrypt_File(char *input, char *output)
-    {
-        unsigned char *key = CTR_encrypt(input, output);
-        string key_str(reinterpret_cast<char*>(key));
-        stream2hex(key_str, key_str);
-        char *result = &key_str[0];
-        cout<<result<<endl;
-        return result;
-    }
-    void Decrypt_File()
-    {
-    }
-}
