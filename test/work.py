@@ -5,7 +5,7 @@ import os
 # locating the 'libsample.so' file in the
 # same directory as this file
 _file = 'work_libsample.so'
-_path = os.path.join(*(os.path.split(__file__)[:-1] + (_file, )))
+_path = os.path.join("/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/test/work_libsample.so")
 _mod = ctypes.cdll.LoadLibrary(_path)
 
 # int gcd(int, int)
