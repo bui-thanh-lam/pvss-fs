@@ -15,7 +15,7 @@ class ClientHandler:
     def __init__(self):
         # load lib
         _file = 'Client_Lib.so'
-        _path = os.path.join("../cpp_libs/client.so")
+        _path = os.path.join("../cpp_libs/Client_Lib.so")
         _mod = cdll.LoadLibrary(_path)
 
         # char *Encrypt_File(char *input, char *output)
@@ -40,7 +40,7 @@ class ClientHandler:
         """
         plain_file_path = c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = c_char_p(cipher_file_path.encode("utf-8"))
-        return self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
+        return self.encryptor(plain_file_path, cipher_file_path)
 
     def decrypt_file(self, cipher_file_path, plain_file_path, key):
         """Decrypt file by AES in CTR mode
@@ -57,7 +57,7 @@ class ClientHandler:
 
 
 client = ClientHandler()
-client.encrypt_file(
+print(client.encrypt_file(
     "../test/test.txt",
     "../test/test.bin"
-)
+))
