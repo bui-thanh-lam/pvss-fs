@@ -3,7 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
+# C shared libs
+**.so
+*.so
+*.bin
 
 
 # Distribution / packaging
@@ -129,3 +132,4 @@ dmypy.json
 .pyre/
 
 .idea/
+test/*

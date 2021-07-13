@@ -377,7 +377,7 @@ void hex2stream(const string hexstr, string &str)
     }
 }
 
-// g++ -fPIC -shared -o Client_Lib.so Client.cpp
+// g++ -fPIC -shared -o Client_Lib.so client.cpp
 extern "C"
 {
     char* Encrypt_File(char *input, char *output)

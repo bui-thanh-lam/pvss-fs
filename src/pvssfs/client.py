@@ -1,5 +1,6 @@
 from communication import ClientCommunicator
 from ctypes import *
+from config import CLIENT_LIB_PATH, TEST_DECRYPTED_DOC_PATH, TEST_DOCUMENT_PATH
 import os
 
 
@@ -14,8 +15,7 @@ class ClientHandler:
 
     def __init__(self):
         # load lib
-        _file = 'Client_Lib.so'
-        _path = os.path.join("../cpp_libs/Client_Lib.so")
+        _path = os.path.join(CLIENT_LIB_PATH)
         _mod = cdll.LoadLibrary(_path)
 
         # char *Encrypt_File(char *input, char *output)
@@ -58,6 +58,6 @@ class ClientHandler:
 
 client = ClientHandler()
 print(client.encrypt_file(
-    "../test/test.txt",
-    "../test/test.bin"
+    TEST_DOCUMENT_PATH,
+    TEST_DECRYPTED_DOC_PATH
 ))
