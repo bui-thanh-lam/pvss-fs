@@ -3,7 +3,7 @@ import os
 
 # load lib
 _file = 'Client_Lib.so'
-_path = os.path.join("/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/test/Client_Lib.so")
+_path = os.path.join("/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/test/client.so")
 _mod = cdll.LoadLibrary(_path)
 
 # char *Encrypt_File(char *input, char *output)
