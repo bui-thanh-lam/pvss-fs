@@ -220,16 +220,16 @@ KeySharing create_key_sharing(mpz_t k[], mpz_t p, int N, int T)
     keySharing.p = mpz_get_str(NULL, 16, p);
     return keySharing;
 }
-KeySharing sharing_key_phase(char *S, int N, int T)
+KeySharing _key_sharing_phase(char *S, int N, int T)
 {
     init();
     mpz_t p;
-    generate_random_prime(p, 3072);
+    generate_random_prime(p, 256);
     mpz_t a[T];
     mpz_t k[N];
 
     mpz_init_set_str(a[0], S, 16);
-    gmp_printf("S = %Zd\n", a[0]);
+//    gmp_printf("S = %Zd\n", a[0]);
     generate_function_K(a, p, T);
     calculate_Ki(k, a, p, N, T);
     // for (int i = 0; i < N; i++)
@@ -239,7 +239,7 @@ KeySharing sharing_key_phase(char *S, int N, int T)
     return create_key_sharing(k, p, N, T);
 }
 
-char *reconstruction_phase(KeySharing keySharing)
+char* _key_reconstruction_phase(KeySharing keySharing)
 {
     int T = keySharing.T;
     mpz_t p;
@@ -311,17 +311,26 @@ char *reconstruction_phase(KeySharing keySharing)
     {
         mpz_clear(k_mpz[i].k);
     }
+//    gmp_printf("S = %Zd\n", S);
     return mpz_get_str(NULL, 16, S);
 }
-
-main()
-{
-    // g++ -g server_noPvss.cpp -o server_noPvss.exe -lgmp
-    char *S = (char *)"7DC7F1D3377048287B1C1C69C846A8DF";
-    // char *S = (char *)"A";
-    int N = 300;
-    int T = 150;
-    KeySharing key = sharing_key_phase(S, N, T);
-    cout << key.p << endl;
-    cout << reconstruction_phase(key) << endl;
+// g++ -fPIC -shared -o Server_Lib.so server_noPvss.cpp - lgmp
+extern "C"{
+    KeySharing key_sharing_phase(char* S, int N, int T){
+        return _key_sharing_phase(S, N, T);
+    }
+    char* key_reconstruction_phase(KeySharing keySharing){
+        return _key_reconstruction_phase(keySharing);
+    }
 }
+// main()
+// {
+//     // g++ -g server_noPvss.cpp -o server_noPvss.exe -lgmp
+//     char *S = (char *)"7DC7F1D3377048287B1C1C69C846A8DF";
+//     // char *S = (char *)"A";
+//     int N = 300;
+//     int T = 150;
+//     KeySharing key = key_sharing_phase(S, N, T);
+//     cout << key.p << endl;
+//     cout << key_reconstruction_phase(key) << endl;
+// }
