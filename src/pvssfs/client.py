@@ -1,7 +1,7 @@
-from communication import ClientCommunicator
+import os
+import requests
 from ctypes import *
 from config import CLIENT_LIB_PATH, TEST_DECRYPTED_DOC_PATH, TEST_DOCUMENT_PATH, TEST_RECOVERED_DOC_PATH
-import os
 
 
 class ClientHandler:
@@ -9,7 +9,7 @@ class ClientHandler:
 
     Methods:
         encrypt_file(plain_file_path, cipher_file_path): encrypt a plain file
-        eecrypt_file(cipher_file_path, plain_file_path, key): decrypt a cipher file
+        encrypt_file(cipher_file_path, plain_file_path, key): decrypt a cipher file
 
     """
 
@@ -46,7 +46,7 @@ class ClientHandler:
         """Decrypt file by AES in CTR mode
 
             Args:
-                cipher_file_path (str): the path to the strored cipher file to decrypt
+                cipher_file_path (str): the path to the stored cipher file to decrypt
                 plain_file_path (str): the path to desired plain file after decryption
                 key (str): the a AES key in hex code
         """
@@ -55,11 +55,28 @@ class ClientHandler:
         key = c_char_p(key.encode("utf-8"))
         return self.decryptor(cipher_file_path, plain_file_path, key)
 
+    def send_key(self, key):
+        pass
 
-client = ClientHandler()
-key = client.encrypt_file(
-    TEST_DOCUMENT_PATH,
-    TEST_DECRYPTED_DOC_PATH
-)
-print(key)
-client.decrypt_file(TEST_DECRYPTED_DOC_PATH, TEST_RECOVERED_DOC_PATH, key)
+    def send_share(self, share):
+        pass
+
+    def get_key(self):
+        pass
+
+    def get_share(self):
+        pass
+    
+    def request_open(self):
+        pass
+
+    
+
+
+# client = ClientHandler()
+# key = client.encrypt_file(
+#     TEST_DOCUMENT_PATH,
+#     TEST_DECRYPTED_DOC_PATH
+# )
+# print(key)
+# client.decrypt_file(TEST_DECRYPTED_DOC_PATH, TEST_RECOVERED_DOC_PATH, key)

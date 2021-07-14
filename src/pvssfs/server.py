@@ -1,7 +1,6 @@
-from communication import ServerCommunicator
+import os
 import ctypes
 from config import SERVER_LIB_PATH
-import os
 
 
 class KeyComponent(ctypes.Structure):
