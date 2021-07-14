@@ -239,7 +239,7 @@ KeySharing sharing_key_phase(char *S, int N, int T)
     return create_key_sharing(k, p, N, T);
 }
 
-char* reconstruction_phase(KeySharing keySharing)
+char *reconstruction_phase(KeySharing keySharing)
 {
     int T = keySharing.T;
     mpz_t p;
@@ -293,27 +293,35 @@ char* reconstruction_phase(KeySharing keySharing)
                 mpz_invert(tmp, tmp, p);
                 // gmp_printf("after tmp = %Zd\n",tmp);
                 mpz_mul(denominator, denominator, tmp);
+                mpz_clear(tmp);
             }
-
         }
         mpz_mul(vj, numerator, denominator);
-        // mpz_mod(vj, vj, p);
         mpz_mul(vj, sj, vj);
-        // mpz_mod(vj, vj, p);
         mpz_add(S, S, vj);
-        // gmp_printf("S = %Zd\n", S);
         mpz_mod(S, S, p);
-        // gmp_printf("vj = %Zd\n", vj);
+
+        mpz_clear(sj);
+        mpz_clear(vj);
+        mpz_clear(numerator);
+        mpz_clear(denominator);
+    }
+    mpz_clear(p);
+    for (int i = 0; i < T; i++)
+    {
+        mpz_clear(k_mpz[i].k);
     }
     return mpz_get_str(NULL, 16, S);
 }
+
 main()
 {
     // g++ -g server_noPvss.cpp -o server_noPvss.exe -lgmp
     char *S = (char *)"7DC7F1D3377048287B1C1C69C846A8DF";
     // char *S = (char *)"A";
-    int N = 100;
-    int T = 50;
+    int N = 300;
+    int T = 150;
     KeySharing key = sharing_key_phase(S, N, T);
-    cout<<reconstruction_phase(key)<<endl;
+    cout << key.p << endl;
+    cout << reconstruction_phase(key) << endl;
 }

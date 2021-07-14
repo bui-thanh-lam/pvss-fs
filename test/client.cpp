@@ -386,11 +386,11 @@ extern "C"
         string key_str(reinterpret_cast<char*>(key_uc));
         stream2hex(key_str, key_str);
         char* key_c = new char[key_str.length()];
-//        char* result = &key_str[0];
         for(int i = 0; i< key_str.length(); i++){
             key_c[i] = key_str[i];
         }
         delete[] key_uc;
+        cout<<"key_c: "<<key_c<<endl;
         return key_c;
     }
     void Decrypt_File(char* input, char* output, char* key_c)

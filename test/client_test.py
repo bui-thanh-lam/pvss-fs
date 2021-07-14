@@ -33,5 +33,5 @@ encrypted = "encrypted.txt"
 recovered = "recovered.txt"
 key = "7AF781D3377048287B1C1C69C846A8DF"
 
-# print(AES_Encrypt(input, encrypted))
-AES_Decrypt(encrypted, recovered, key)
+print(AES_Encrypt(input, encrypted))
+# AES_Decrypt(encrypted, recovered, key)

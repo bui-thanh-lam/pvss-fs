@@ -1,7 +1,266 @@
 #include <iostream>
 #include <string.h>
-using namespace std;
+#include "gmp.h"
 
+using namespace std;
+const char *hex_value[256] = {
+    "00",
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "0A",
+    "0B",
+    "0C",
+    "0D",
+    "0E",
+    "0F",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "1A",
+    "1B",
+    "1C",
+    "1D",
+    "1E",
+    "1F",
+    "20",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28",
+    "29",
+    "2A",
+    "2B",
+    "2C",
+    "2D",
+    "2E",
+    "2F",
+    "30",
+    "31",
+    "32",
+    "33",
+    "34",
+    "35",
+    "36",
+    "37",
+    "38",
+    "39",
+    "3A",
+    "3B",
+    "3C",
+    "3D",
+    "3E",
+    "3F",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "4A",
+    "4B",
+    "4C",
+    "4D",
+    "4E",
+    "4F",
+    "50",
+    "51",
+    "52",
+    "53",
+    "54",
+    "55",
+    "56",
+    "57",
+    "58",
+    "59",
+    "5A",
+    "5B",
+    "5C",
+    "5D",
+    "5E",
+    "5F",
+    "60",
+    "61",
+    "62",
+    "63",
+    "64",
+    "65",
+    "66",
+    "67",
+    "68",
+    "69",
+    "6A",
+    "6B",
+    "6C",
+    "6D",
+    "6E",
+    "6F",
+    "70",
+    "71",
+    "72",
+    "73",
+    "74",
+    "75",
+    "76",
+    "77",
+    "78",
+    "79",
+    "7A",
+    "7B",
+    "7C",
+    "7D",
+    "7E",
+    "7F",
+    "80",
+    "81",
+    "82",
+    "83",
+    "84",
+    "85",
+    "86",
+    "87",
+    "88",
+    "89",
+    "8A",
+    "8B",
+    "8C",
+    "8D",
+    "8E",
+    "8F",
+    "90",
+    "91",
+    "92",
+    "93",
+    "94",
+    "95",
+    "96",
+    "97",
+    "98",
+    "99",
+    "9A",
+    "9B",
+    "9C",
+    "9D",
+    "9E",
+    "9F",
+    "A0",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8",
+    "A9",
+    "AA",
+    "AB",
+    "AC",
+    "AD",
+    "AE",
+    "AF",
+    "B0",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B9",
+    "BA",
+    "BB",
+    "BC",
+    "BD",
+    "BE",
+    "BF",
+    "C0",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "C7",
+    "C8",
+    "C9",
+    "CA",
+    "CB",
+    "CC",
+    "CD",
+    "CE",
+    "CF",
+    "D0",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "D7",
+    "D8",
+    "D9",
+    "DA",
+    "DB",
+    "DC",
+    "DD",
+    "DE",
+    "DF",
+    "E0",
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "EA",
+    "EB",
+    "EC",
+    "ED",
+    "EE",
+    "EF",
+    "F0",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "F8",
+    "F9",
+    "FA",
+    "FB",
+    "FC",
+    "FD",
+    "FE",
+    "FF",
+};
 unsigned char s_box[256] =
     {
         0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -261,7 +520,7 @@ void createIV(unsigned char *IV, uint8_t *nonce, uint64_t ctr)
     // }
 }
 
-unsigned char* CTR_encrypt(char *inputFilePath, char *outputFilePath)
+unsigned char *CTR_encrypt(char *inputFilePath, char *outputFilePath)
 {
     unsigned char *nonce = generateRandomBytes(8);
     unsigned char *IV = new unsigned char[16];
@@ -300,17 +559,17 @@ unsigned char* CTR_encrypt(char *inputFilePath, char *outputFilePath)
     }
     //write file
     fp = fopen(outputFilePath, "wb");
-	fwrite((unsigned char *)nonce, 1, 8, fp);
-	fwrite((unsigned char *)plainText, 1, totalLength, fp);
-	fclose(fp);
-	delete[] plainText;
-	delete[] expanded_key;
-	delete[] IV;
-	delete[] nonce;
+    fwrite((unsigned char *)nonce, 1, 8, fp);
+    fwrite((unsigned char *)plainText, 1, totalLength, fp);
+    fclose(fp);
+    delete[] plainText;
+    delete[] expanded_key;
+    delete[] IV;
+    delete[] nonce;
     return key;
 }
 
-void CTR_decrypt(char *inputFilePath, char *outputFilePath, unsigned char* key)
+void CTR_decrypt(char *inputFilePath, char *outputFilePath, unsigned char *key)
 {
     //init
     unsigned char *IV = new unsigned char[16];
@@ -342,100 +601,58 @@ void CTR_decrypt(char *inputFilePath, char *outputFilePath, unsigned char* key)
     }
     //write file
     int paddingValue = (int)cipherText[n - 1];
-	fp = fopen(outputFilePath, "wb");
-	fwrite((unsigned char *)cipherText, 1, n - paddingValue, fp);
-	fclose(fp);
-	delete[] cipherText;
-	delete[] key;
-	delete[] expanded_key;
-	delete[] IV;
-	delete[] nonce;
-
+    fp = fopen(outputFilePath, "wb");
+    fwrite((unsigned char *)cipherText, 1, n - paddingValue, fp);
+    fclose(fp);
+    delete[] cipherText;
+    delete[] key;
+    delete[] expanded_key;
+    delete[] IV;
+    delete[] nonce;
 }
 
-void stream2hex(const string str, string &hexstr, bool capital = true)
+
+char* unsignedchar2hex(unsigned char *str, int n)
 {
-    hexstr.resize(str.size() * 2);
-    const size_t a = capital ? 'A' - 1 : 'a' - 1;
-
-    for (size_t i = 0, c = str[0] & 0xFF; i < hexstr.size(); c = str[i / 2] & 0xFF)
+    int length = 2 * n;
+    char *result = new char[length+1];
+    result[length] = '\0';
+    for (int i = 0; i < 16; i++)
     {
-        hexstr[i++] = c > 0x9F ? (c / 16 - 9) | a : c / 16 | '0';
-        hexstr[i++] = (c & 0xF) > 9 ? (c % 16 - 9) | a : c % 16 | '0';
+        int c_value = (int)str[i];
+        *(result + 2*i) = hex_value[c_value][0];
+        *(result + 2*i + 1) = hex_value[c_value][1];
     }
+    return result;
 }
 
-// Convert string of hex numbers to its equivalent char-stream
-void hex2stream(const string hexstr, string &str)
-{
-    str.resize((hexstr.size() + 1) / 2);
-
-    for (size_t i = 0, j = 0; i < str.size(); i++, j++)
-    {
-        str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
-        str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+unsigned char* hex2unsignedchar(char* hex, int n){
+    unsigned char* result = new unsigned char[n/2+1];
+    for(int i = 0; i < n/2; i++){
+        char* hex_value = new char[3];
+        hex_value[0] = hex[2*i];
+        hex_value[1] = hex[2*i+1];
+        hex_value[2] = '\0';
+        mpz_t tmp;
+        mpz_init_set_str(tmp, hex_value, 16);
+        result[i] =(unsigned char) mpz_get_ui(tmp);
+        mpz_clear(tmp);
     }
+    result[n/2] = '\0';
+    return result;
 }
-
 // g++ -fPIC -shared -o Client_Lib.so client.cpp
 extern "C"
 {
-    char* Encrypt_File(char *input, char *output)
+    char *Encrypt_File(char *input, char *output)
     {
         unsigned char *key_uc = CTR_encrypt(input, output);
-        string key_str(reinterpret_cast<char*>(key_uc));
-        stream2hex(key_str, key_str);
-        char* key_c = new char[key_str.length()];
-//        char* result = &key_str[0];
-        for(int i = 0; i< key_str.length(); i++){
-            key_c[i] = key_str[i];
-        }
-        delete[] key_uc;
-        return key_c;
+        return unsignedchar2hex(key_uc, 16);
     }
-    void Decrypt_File(char* input, char* output, char* key_c)
+    void Decrypt_File(char *input, char *output, char *key_c)
     {
-        string key_str(key_c);
-        hex2stream(key_str, key_str);
-        unsigned char* key_uc = new unsigned char[key_str.length()];
-        for(int i = 0; i < key_str.length(); i++){
-            key_uc[i] = key_str[i];
-        }
+        unsigned char *key_uc = hex2unsignedchar(key_c, 32);
         CTR_decrypt(input, output, key_uc);
     }
 }
 
-// int main()
-// {
-// 	unsigned char msg[] = "This is an encrypted message.";
-// 	unsigned char key[16] = {1, 2, 3, 4,
-// 							 5, 6, 7, 8,
-// 							 9, 10, 11, 12,
-// 							 13, 14, 15, 16};
-// 	int original_len = strlen((const char *)msg);
-// 	int padded_len = original_len;
-// 	if (padded_len % 16 != 0)
-// 	{
-// 		padded_len = (padded_len / 16 + 1) * 16;
-// 	}
-// 	unsigned char *padded_msg = new unsigned char[padded_len];
-// 	for (int i = 0; i < padded_len; i++)
-// 	{
-// 		if (i > original_len)
-// 			padded_msg[i] = 0;
-// 		else
-// 			padded_msg[i] = msg[i];
-// 	}
-// 	for (int i = 0; i < padded_len; i += 16)
-// 	{
-// 		AES_encrypt(padded_msg + i, key);
-// 	}
-// 	cout << "Encrypted Message:" << endl;
-// 	for (int i = 0; i < padded_len; i++)
-// 	{
-// 		print_hex(padded_msg[i]);
-// 		cout << " ";
-// 	}
-// 	delete[] padded_msg;
-// 	return 0;
-// }

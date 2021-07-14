@@ -133,3 +133,4 @@ dmypy.json
 
 .idea/
 test/*
+src/pvssfs/config.py

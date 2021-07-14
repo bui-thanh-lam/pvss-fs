@@ -1,3 +1,5 @@
-CLIENT_LIB_PATH = "/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/src/cpp_libs/Client_Lib.so"
-TEST_DOCUMENT_PATH = "/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/test/test.txt"
-TEST_DECRYPTED_DOC_PATH = "/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/test/test.bin"
+CLIENT_LIB_PATH = "../cpp_libs/Client_Lib.so"
+SERVER_LIB_PATH = "../cpp_libs/Server_Lib.so"
+TEST_DOCUMENT_PATH = "../../test/test4.txt"
+TEST_DECRYPTED_DOC_PATH = "../../test/test.bin"
+TEST_RECOVERED_DOC_PATH = "../../test/recovered.txt"

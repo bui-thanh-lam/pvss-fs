@@ -1,6 +1,6 @@
 from communication import ClientCommunicator
 from ctypes import *
-from config import CLIENT_LIB_PATH, TEST_DECRYPTED_DOC_PATH, TEST_DOCUMENT_PATH
+from config import CLIENT_LIB_PATH, TEST_DECRYPTED_DOC_PATH, TEST_DOCUMENT_PATH, TEST_RECOVERED_DOC_PATH
 import os
 
 
@@ -10,7 +10,7 @@ class ClientHandler:
     Methods:
         encrypt_file(plain_file_path, cipher_file_path): encrypt a plain file
         eecrypt_file(cipher_file_path, plain_file_path, key): decrypt a cipher file
-    
+
     """
 
     def __init__(self):
@@ -34,13 +34,13 @@ class ClientHandler:
             Args:
                 plain_file_path (str): the path to the plain file to encrypt
                 cipher_file_path (str): the path to store cipher file after encryption
-            
+
             Return:
                 key (str): the aes key in hex code
         """
         plain_file_path = c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = c_char_p(cipher_file_path.encode("utf-8"))
-        return self.encryptor(plain_file_path, cipher_file_path)
+        return self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
 
     def decrypt_file(self, cipher_file_path, plain_file_path, key):
         """Decrypt file by AES in CTR mode
@@ -57,7 +57,9 @@ class ClientHandler:
 
 
 client = ClientHandler()
-print(client.encrypt_file(
+key = client.encrypt_file(
     TEST_DOCUMENT_PATH,
     TEST_DECRYPTED_DOC_PATH
-))
+)
+print(key)
+client.decrypt_file(TEST_DECRYPTED_DOC_PATH, TEST_RECOVERED_DOC_PATH, key)
