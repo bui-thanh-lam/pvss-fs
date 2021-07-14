@@ -43,7 +43,12 @@ S = "3CE7C3C862457688D415D34753A446D0"
 N = 10
 T = 5
 shares = server.share_key(S, N, T)
-print(shares)
+print("N =", shares.N)
+print("T =", shares.T)
+print("Large Prime p =", shares.p.decode("utf-8"))
+print("Key component: ")
+for i in range(0,N):
+    print("x = ", shares.key_component[i].x, " k = ", shares.key_component[i].k.decode("utf-8"))
 reconstructed_key = server.reconstruct_key(shares)
 print(reconstructed_key)
 
