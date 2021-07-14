@@ -27,22 +27,21 @@ class ServerHandler:
         self.key_reconstruction_phase.argtypes = [ctypes.POINTER(KeySharing)]
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
-    def compute_shares(self, key, N=3, T=2):
+    def compute_shares(self, S, N=3, T=2):
         """Compute shares given a key
 
         Args:
-            key (str): a given key
+            S (str): a given key
             N (int): number of shareholders
             T (int): threshold of shareholders to reconstruct the key from their shares
             
         Return:
 
         """
-        # S = ctypes.c_char_p(S.encode("utf-8"))
-        # N = ctypes.c_int(N)
-        # T = ctypes.c_int(T)
-        # return self.key_sharing_phase(S, N, T)
-        pass
+        S = ctypes.c_char_p(S.encode("utf-8"))
+        N = ctypes.c_int(N)
+        T = ctypes.c_int(T)
+        return self.key_sharing_phase(S, N, T)
 
     def reconstruct_key(self, shares):
         """Reconstruct the secret key from collected shares
@@ -53,8 +52,7 @@ class ServerHandler:
         Return:
             key (str): recontructed key
         """
-        # return self.key_reconstruction_phase(shares)
-        pass
+        return self.key_reconstruction_phase(shares)
     
     def collect_shares(self):
         pass
@@ -63,12 +61,12 @@ class ServerHandler:
         pass
 
 
-# server = ServerHandler()
-# S = "3CE7C3C862457688D415D34753A446D0"
-# N = 10
-# T = 5
-# shares = server.share_key(S, N, T)
-# print(shares)
-# reconstructed_key = server.reconstruct_key(shares)
-# print(reconstructed_key)
+server = ServerHandler()
+S = "3CE7C3C862457688D415D34753A446D0"
+N = 10
+T = 5
+shares = server.compute_shares(S, N, T)
+print(shares)
+reconstructed_key = server.reconstruct_key(shares)
+print(reconstructed_key)
 
