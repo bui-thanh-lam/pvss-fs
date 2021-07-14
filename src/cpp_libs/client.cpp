@@ -1,3 +1,5 @@
+// g++ -fPIC -shared -o Client_Lib.so client.cpp
+
 #include <iostream>
 #include <string.h>
 #include "gmp.h"
@@ -641,7 +643,6 @@ unsigned char* hex2unsignedchar(char* hex, int n){
     result[n/2] = '\0';
     return result;
 }
-// g++ -fPIC -shared -o Client_Lib.so client.cpp
 extern "C"
 {
     char *Encrypt_File(char *input, char *output)

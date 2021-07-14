@@ -1,4 +1,3 @@
-
 // g++ -g server.cpp -o server.exe -lgmp
 
 #include <bits/stdc++.h>

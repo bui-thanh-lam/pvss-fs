@@ -1,3 +1,5 @@
+// g++ -fPIC -shared -o Server_Lib.so server_noPvss.cpp -lgmp
+
 #include <bits/stdc++.h>
 #include "gmp.h"
 
@@ -314,7 +316,6 @@ char* _key_reconstruction_phase(KeySharing keySharing)
     gmp_printf("S = %Zd\n", S);
     return mpz_get_str(NULL, 16, S);
 }
-// g++ -fPIC -shared -o Server_Lib.so server_noPvss.cpp - lgmp
 extern "C"{
     KeySharing key_sharing_phase(char* S, int N, int T){
         return _key_sharing_phase(S, N, T);
