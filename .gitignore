@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # C shared libs
-**.so
+*.so
 *.so
 *.bin
 
@@ -131,6 +131,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.idea/
-test/*
-src/pvssfs/config.py
+config.py
+test/

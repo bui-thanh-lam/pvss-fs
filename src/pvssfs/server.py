@@ -42,7 +42,8 @@ server = ServerHandler()
 S = "3CE7C3C862457688D415D34753A446D0"
 N = 10
 T = 5
-key_sharing = server.share_key(S, N, T)
-reconstructed_key = server.reconstruct_key(key_sharing)
+shares = server.share_key(S, N, T)
+print(shares)
+reconstructed_key = server.reconstruct_key(shares)
 print(reconstructed_key)
 

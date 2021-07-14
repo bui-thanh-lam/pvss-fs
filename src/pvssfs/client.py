@@ -1,7 +1,7 @@
 import os
+import config
 import requests
 from ctypes import *
-from config import CLIENT_LIB_PATH, TEST_DECRYPTED_DOC_PATH, TEST_DOCUMENT_PATH, TEST_RECOVERED_DOC_PATH
 
 
 class ClientHandler:
@@ -15,7 +15,7 @@ class ClientHandler:
 
     def __init__(self):
         # load lib
-        _path = os.path.join(CLIENT_LIB_PATH)
+        _path = os.path.join(config.CLIENT_LIB_PATH)
         _mod = cdll.LoadLibrary(_path)
 
         # char *Encrypt_File(char *input, char *output)
@@ -75,8 +75,8 @@ class ClientHandler:
 
 # client = ClientHandler()
 # key = client.encrypt_file(
-#     TEST_DOCUMENT_PATH,
-#     TEST_DECRYPTED_DOC_PATH
+#     config.TEST_DOCUMENT_PATH,
+#     config.TEST_DECRYPTED_DOC_PATH
 # )
 # print(key)
-# client.decrypt_file(TEST_DECRYPTED_DOC_PATH, TEST_RECOVERED_DOC_PATH, key)
+# client.decrypt_file(config.TEST_DECRYPTED_DOC_PATH, config.TEST_RECOVERED_DOC_PATH, key)
