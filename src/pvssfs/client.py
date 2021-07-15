@@ -84,10 +84,14 @@ class ClientHandler:
         pass
 
     def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
+        f = open(file_path, 'rb')
         requests.post(
             config.API_ENDPOINT + "send_file/",
+            params={
+                'client_id': 0
+            },
             files={
-                'file': ('test.txt', open(file_path, 'rb')),
+                'file': ('test.txt', f, 'multipart/form-data'),
             }
         )
     
