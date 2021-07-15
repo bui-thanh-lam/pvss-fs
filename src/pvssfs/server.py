@@ -73,6 +73,7 @@ class ServerHandler:
 
 
     def convert_shares_to_key_sharing(self, shares):
+        #fixing
         """Convert the shares (json form) to struct KeySharing
 
                        Args:
@@ -97,6 +98,7 @@ class ServerHandler:
         return key_sharing
 
     def reconstruct_key(self, shares):
+        #fixing
         """Reconstruct the secret key from collected shares
 
         Args:
@@ -124,5 +126,5 @@ N = 10
 T = 5
 shares = server.compute_shares(S, N, T)
 pprint.pprint(shares)
-reconstructed_key = server.reconstruct_key(shares)
-print(reconstructed_key)
+# reconstructed_key = server.reconstruct_key(shares)
+# print(reconstructed_key)
