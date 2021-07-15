@@ -13,6 +13,23 @@ class KeySharing(ctypes.Structure):
                 ('key_component', ctypes.POINTER(KeyComponent))]
 
 
+class FileDetail():
+    
+    def __init__(
+        self, 
+        plain_file_path,
+        cipher_file_path,
+        owner_id,
+        N, T, p
+    ):
+        self.plain_file_path = plain_file_path
+        self.cipher_file_path = cipher_file_path
+        self.owner_id = owner_id
+        self.N = N
+        self.T = T
+        self.p = p
+
+
 class ServerHandler:
 
     def __init__(self):
@@ -41,39 +58,33 @@ class ServerHandler:
         self.client_received_shares = []
         self.client_sent_shares = []
 
-
-
-    def check_client_id_exist(self, client_id):
+    def _is_valid_client_id(self, client_id):
         return client_id in self.client_ids
 
+    def _has_received_share(self, client_id):
+        return client_id in self.client_received_shares
 
-    def check_client_id_not_received_share(self, client_id):
-        return client_id not in self.client_received_shares
+    def _has_sent_share(self,client_id):
+        return client_id in self.collected_shares
 
+    def _has_enough_shares(self):
+        return len(self.collected_shares) >= self.file_detail.T
 
-    def check_client_id_not_sent_share(self,client_id):
-        return client_id not in self.collected_shares
-
-    def check_enough_share(self):
-        return len(self.collected_shares) >= self.file_detail["T"]
-
-    def get_key(self, client_id):
-        """return code:
-                       100. client_id is not exist
-                       200. client id is not owner
-                       300. do not collect enough share
-                       400. get key successful
-                       """
-        resp = {}
-        status_code = 0
-        if self.check_client_id_exist(client_id):
-            if self.file_detail["owner_id"] == client_id:
-                if self.check_enough_share():
-                    status_code = 400
+    def reconstruct_key(self, client_id):  
+        """
+        Args:
+            client_id (str): client id, expected owner's id
+            
+        Return:
+            key (str): key for owner to decrypt desired file
+        """                   
+        if self._is_valid_client_id(client_id):
+            if self.file_detail.owner_id == client_id:
+                if self._has_enough_shares():
                     key_sharing = KeySharing()
-                    key_sharing.N = ctypes.c_int(self.file_detail["N"])
-                    key_sharing.T = ctypes.c_int(self.file_detail["T"])
-                    key_sharing.p = ctypes.c_char_p(self.file_detail["p"].encode("utf-8"))
+                    key_sharing.N = ctypes.c_int(self.file_detail.N)
+                    key_sharing.T = ctypes.c_int(self.file_detail.T)
+                    key_sharing.p = ctypes.c_char_p(self.file_detail.p.encode("utf-8"))
                     key_component_array_type = KeyComponent * key_sharing.T
                     key_component_array = key_component_array_type()
                     for i in range(0, key_sharing.T):
@@ -81,49 +92,48 @@ class ServerHandler:
                                                      ctypes.c_int(self.collected_shares[i]["x"]))
                         key_component_array[i] = key_component
                     key_sharing.key_component = ctypes.cast(key_component_array, ctypes.POINTER(KeyComponent))
-                    resp["key"] = self.reconstruct_key(key_sharing)
-                    resp["plain_file_path"] = self.file_detail["plain_file_path"]
-                    resp["cipher_file_path"] = self.file_detail["cipher_file_path"]
+                    key = self._reconstruct_key(key_sharing)
+                    return key
                 else:
-                    status_code = 300
+                    raise Exception("Insufficient shares to reconstruct")
             else:
-                status_code = 200
+                raise Exception("This client is not the owner")
         else:
-            status_code = 100
+            raise Exception("Invalid client id")
 
-        resp["status_code"] = status_code
-        return resp
-
-
-
-    def compute_shares(self, AES_key):
-        """Compute shares given a key
+    def compute_shares(self, AES_key, threshold=0.5):
+        """Compute shares given a key, store in object's attributes
 
         Args:
-            S (str): a given key
-            N (int): number of shareholders
-            T (int): threshold of shareholders to reconstruct the key from their shares
+            AES_key (AES_key): body of "send_key" request
+                class AES_key(BaseModel):
+                    client_id: str
+                    key: str
+                    cipher_file_path: str
+                    plain_file_path: str
+            threshold (float): T / N ratio
 
         Return:
-            shares (json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
+            (bool): True if compute shares successfully
         """
-        client_id = AES_key["client_id"]
-        if(self.check_client_id_exist(client_id)):
-            S = AES_key["key"]
+        client_id = AES_key.client_id
+        if self._is_valid_client_id(client_id):
+            S = AES_key.key
             S = ctypes.c_char_p(S.encode("utf-8"))
             N = ctypes.c_int(self.n_clients)
-            T = int(self.n_clients/ 2)
+            T = int(self.n_clients*threshold)
             T = ctypes.c_int(T)
 
             key_sharing = self.key_sharing_phase(S, N, T)
 
-            file_detail = {}
-            file_detail["plain_file_path"] = AES_key["plain_file_path"]
-            file_detail["cipher_file_path"] = AES_key["cipher_file_path"]
-            file_detail["owner_id"] = AES_key["client_id"]
-            file_detail["N"] = key_sharing.N
-            file_detail["T"] = key_sharing.T
-            file_detail["p"] = key_sharing.p.decode("utf-8")
+            self.file_detail = FileDetail(
+                AES_key.plain_file_path,
+                AES_key.cipher_file_path,
+                AES_key.client_id,
+                key_sharing.N,
+                key_sharing.T,
+                key_sharing.p.decode("utf-8")
+            )
             key_components = []
             for i in range(0, key_sharing.N):
                 key_component = {}
@@ -131,18 +141,14 @@ class ServerHandler:
                 key_component["k"] = key_sharing.key_component[i].k.decode("utf-8")
                 key_components.append(key_component)
             self.shares = key_components
-            self.file_detail = file_detail
-            print(self.file_detail)
-            print(self.shares)
             return True
         return False
 
-
-    def reconstruct_key(self, key_sharing):
+    def _reconstruct_key(self, key_sharing):
         """Reconstruct the secret key from collected shares
 
         Args:
-            shares (): collected shares
+            key_sharing (KeySharing): collected shares
 
         Return:
             key (str): recontructed key
@@ -150,51 +156,63 @@ class ServerHandler:
         return self.key_reconstruction_phase(key_sharing).decode("utf-8")
 
     def collect_shares(self, share):
-        """return code:
-               100. client_id is not exist
-               200. client id sent share
-               300. send share successful
-               """
-        client_id = share["client_id"]
-        if self.check_client_id_exist(client_id):
-            if self.check_client_id_not_sent_share(client_id):
+        """
+    
+        Args:
+            share (Share): a client's share
+                class Share(BaseModel):
+                    x: int
+                    k: str
+                    client_id: str
+                    
+        Return:
+            (bool): True if receive a share successfully
+        """
+
+        client_id = share.client_id
+        if self._is_valid_client_id(client_id):
+            if self._has_sent_share(client_id):
+                raise Exception("This client has already sent his share")
+            else:
                 self.collected_shares.append(share)
                 self.client_sent_shares.append(client_id)
-                return 300
-            else:
-                return 200
+                return True
         else:
-            return 100
-
-
+            raise Exception("Invalid client id")
 
     def distribute_share(self, client_id):
-        if self.check_client_id_exist(client_id):
-            if self.check_client_id_not_received_share(client_id):
+        """Distribute a share to a client given his id
+
+        Args:
+            client_id (str): expected a valid client_id
+
+        Raise:
+            Exception: "Invalid client id" if the given client_id is invalid
+            Exception: "This client has already received his share" if the given client_id request his share more than once
+
+        Return:
+            share (dict): {'k', 'x'}
+        """
+        if self._is_valid_client_id(client_id):
+            if self._has_received_share(client_id):
+                raise Exception("This client has already received his share")
+            else:
                 share = self.shares.pop(0)
                 self.client_received_shares.append(client_id)
                 return share
-        return None
-
+        else:
+            raise Exception("Invalid client id")
 
     def check_request_open(self, client_id):
-        """return code:
-        100. client_id is not exist
-        200. client_id is not owner
-        300. still have share is not distributed
-        400. request open is accepted
-        """
-        if self.check_client_id_exist(client_id):
-            if self.file_detail["owner_id"] != client_id:
-                return 200
+        if self._is_valid_client_id(client_id):
+            if self.file_detail.owner_id == client_id:
+                return True
+            elif len(self.shares) != 0:
+                raise Exception("Shares have not been distributed yet")
             else:
-                if len(self.shares) != 0:
-                    return 300
-                else:
-                    return 400
+                raise Exception("This client is not the owner")
         else:
-            return 100
-
+            raise Exception("Invalid client id")
 
     def distribute_client_id(self):
         self.n_clients += 1
@@ -202,19 +220,9 @@ class ServerHandler:
         self.client_ids.append(client_id)
         return client_id
 
-
     def receive_file(self, file):
         server_filename = config.STORAGE_PATH+"/"+file.filename.replace(" ", "_")
         with open(server_filename,'wb+') as f:
             f.write(file.file.read())
             f.close()
         setattr(self, 'filename', server_filename)
-
-# server = ServerHandler()
-# S = "3CE7C3C862457688D415D34753A446D0"
-# N = 10
-# T = 5
-# shares = server.compute_shares(S, N, T)
-# pprint.pprint(shares)
-# reconstructed_key = server.reconstruct_key(shares)
-# print(reconstructed_key)
