@@ -22,18 +22,22 @@ class AES_key(BaseModel):
     cipher_file_path: str
     plain_file_path: str
 
+class Share(BaseModel):
+    x: int
+    k: str
+    client_id: str
 
 @app.get("/get_client_id/")
 def get_cient_id():
     # Server generate client_id for new client
     resp = {}
     global phase
-    if phase == 1:
-        client_id = server.distribute_client_id()
-        resp["client_id"] = client_id
-    else:
+    if phase != 1:
         print("cannot register into file sharing system")
         resp["client_id"] = None
+    else:
+        client_id = server.distribute_client_id()
+        resp["client_id"] = client_id
     return resp
 
 
@@ -44,22 +48,17 @@ def send_key(key: AES_key):
     global phase
     if (phase == 1):
         key = json.loads(key.json())
-        if(server.compute_shares(key)):
+        if (server.compute_shares(key)):
             phase = 2
             resp["message"] = "key sharing successful"
-            print(resp)
-            return resp
         else:
             resp["message"] = "client_id is not exist"
-            print(resp)
-            return resp
-
     else:
         resp["message"] = "cannot share file"
-        print(resp)
-        return resp
-    
-    
+    print(resp)
+    return resp
+
+
 @app.get("/get_share/")
 def get_share(client_id):
     # Server generate shares, then distribute each share to each shareholder
@@ -71,6 +70,10 @@ def get_share(client_id):
     else:
         # client_info = json.loads(client_info.json())
         resp = server.distribute_share(client_id)
+        if(resp == None):
+            print("cannot get share")
+        else:
+            print("get share successful")
         return resp
 
 
@@ -100,21 +103,62 @@ def request_open(client_id):
         else:
             resp["message"] = "request open is accepted"
             phase = 3
+    print(resp)
     return resp
 
 
 @app.post("/send_share/")
-def send_share(share: str):
+def send_share(share: Share):
     # Server receive a share and append it to collection
-    pass
+    """return code:
+                   100. client_id is not exist
+                   200. client id sent share
+                   300. send share successful
+                   """
+    resp = {}
+    global phase
+    if phase != 3:
+        resp["message"] = "cannot send share"
+    else:
+        share = json.loads(share.json())
+        res = server.collect_shares(share)
+        if res == 100:
+            resp["message"] = " client id is not exist"
+        elif res == 200:
+            resp["message"] = "client sent share"
+        else:
+            resp["message"] = "send share successful"
+    print(resp)
+    return resp
 
-    
+
 @app.get("/get_key/")
-def get_key():
+def get_key(client_id):
     # Check whether this client is the owner
     # If True, server recontruct and return the key
     # Otherwise, server refuse reconstructing
-    pass
+    """return code:
+                           100. client_id is not exist
+                           200. client id is not owner
+                           300. do not collect enough share
+                           400. get key successful
+                           """
+    resp = {}
+    global phase
+    if phase != 3:
+        resp["message"] = "cannot get key"
+    else:
+        resp = server.get_key(client_id)
+        if resp["status_code"] == 100:
+            resp["message"] = "client id is not exist"
+        elif resp["status_code"] ==  200:
+            resp["message"] = "client id is not owner"
+        elif resp["status_code"] == 300:
+            resp["message"] = "do not collect enough share"
+        else:
+            resp["message"] ="get key successful"
+    print(resp["message"])
+    return resp
 
 
 @app.post("/send_file/")
@@ -124,6 +168,7 @@ def send_file(client_id: str, file: UploadFile = File(...)):
     return {
         'filename': server.filename
     }
+
 
 @app.get("/download_file/")
 def download_file(client_id: str):

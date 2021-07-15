@@ -34,7 +34,7 @@ class ClientHandler:
         self.decryptor.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p)
         self.decryptor.restype = ctypes.c_void_p
 
-        self.share = {}
+        self.share = None
 
     def encrypt_file(self, plain_file_path, cipher_file_path):
         """Encrypt file by AES in CTR mode
@@ -72,8 +72,8 @@ class ClientHandler:
         AES_key["plain_file_path"] = plain_file_path
         AES_key["cipher_file_path"] = cipher_file_path
         AES_key = json.dumps(AES_key)
-        print(AES_key)
-        requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
+        r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
+        print(r.json())
 
     def get_share(self):
         r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id':self.client_id})
@@ -83,12 +83,18 @@ class ClientHandler:
         else:
             print("cannot get share")
 
-    def send_share(self, share):
-        pass
+    def send_share(self):
+        if self.share == None:
+            print("You have not received the share")
+        else:
+            self.share["client_id"] = self.client_id
+            share = json.dumps(self.share)
+            r = requests.post(config.API_ENDPOINT + "send_share/", data=share)
+            print(r.json())
 
     def request_open(self):
         r = requests.get(config.API_ENDPOINT +"request_open/", params={'client_id':self.client_id})
-        print(r)
+        print(r.json())
 
     def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
         f = open(file_path, 'rb')
@@ -110,3 +116,19 @@ class ClientHandler:
             }
         )
         print(response.content.decode("utf-8"))
+
+    def get_key(self):
+        r = requests.get(config.API_ENDPOINT + "get_key/", params={'client_id':self.client_id})
+        resp = r.json()
+        if resp["status_code"] == 100:
+            print("client id is not exist")
+        elif resp["status_code"] ==  200:
+            print("client id is not owner")
+        elif resp["status_code"] == 300:
+            print("do not collect enough share")
+        else:
+            print("get key successful")
+            print("decrypting file ...")
+            print(resp)
+            self.decrypt_file(resp["cipher_file_path"], resp["plain_file_path"], resp["key"])
+            print("decrypt successful")

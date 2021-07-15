@@ -33,15 +33,68 @@ class ServerHandler:
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
         self.file_detail = {}
+
         self.shares = []
+        self.collected_shares = []
+
         self.client_ids = []
         self.list_client_received_share = []
+        self.list_client_sent_share = []
 
-    def check_client_id(self, client_id):
+
+
+    def check_client_id_exist(self, client_id):
         return client_id in self.client_ids
+
 
     def check_client_id_not_received_share(self, client_id):
         return client_id not in self.list_client_received_share
+
+
+    def check_client_id_not_sent_share(self,client_id):
+        return client_id not in self.collected_shares
+
+    def check_enough_share(self):
+        return len(self.collected_shares) >= self.file_detail["T"]
+
+    def get_key(self, client_id):
+        """return code:
+                       100. client_id is not exist
+                       200. client id is not owner
+                       300. do not collect enough share
+                       400. get key successful
+                       """
+        resp = {}
+        status_code = 0
+        if self.check_client_id_exist(client_id):
+            if self.file_detail["owner_id"] == client_id:
+                if self.check_enough_share():
+                    status_code = 400
+                    key_sharing = KeySharing()
+                    key_sharing.N = ctypes.c_int(self.file_detail["N"])
+                    key_sharing.T = ctypes.c_int(self.file_detail["T"])
+                    key_sharing.p = ctypes.c_char_p(self.file_detail["p"].encode("utf-8"))
+                    key_component_array_type = KeyComponent * key_sharing.T
+                    key_component_array = key_component_array_type()
+                    for i in range(0, key_sharing.T):
+                        key_component = KeyComponent(ctypes.c_char_p(self.collected_shares[i]["k"].encode("utf-8")),
+                                                     ctypes.c_int(self.collected_shares[i]["x"]))
+                        key_component_array[i] = key_component
+                    key_sharing.key_component = ctypes.cast(key_component_array, ctypes.POINTER(KeyComponent))
+                    resp["key"] = self.reconstruct_key(key_sharing)
+                    resp["plain_file_path"] = self.file_detail["plain_file_path"]
+                    resp["cipher_file_path"] = self.file_detail["cipher_file_path"]
+                else:
+                    status_code = 300
+            else:
+                status_code = 200
+        else:
+            status_code = 100
+
+        resp["status_code"] = status_code
+        return resp
+
+
 
     def compute_shares(self, AES_key):
         """Compute shares given a key
@@ -55,7 +108,7 @@ class ServerHandler:
             shares (json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
         """
         client_id = AES_key["client_id"]
-        if(self.check_client_id(client_id)):
+        if(self.check_client_id_exist(client_id)):
             S = AES_key["key"]
             S = ctypes.c_char_p(S.encode("utf-8"))
             N = ctypes.c_int(self.n_clients)
@@ -84,30 +137,8 @@ class ServerHandler:
             return True
         return False
 
-    def convert_shares_to_key_sharing(self, shares):
-        """Convert the shares (json form) to struct KeySharing
 
-                Args:
-                    shares(json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
-
-                Return:
-                    key_sharing: KeySharing
-            """
-        key_sharing = KeySharing()
-        key_sharing.N = ctypes.c_int(shares["N"])
-        key_sharing.T = ctypes.c_int(shares["T"])
-        key_sharing.p = ctypes.c_char_p(shares["p"].encode("utf-8"))
-        key_component_array_type = KeyComponent * key_sharing.T
-        key_component_array = key_component_array_type()
-
-        key_components = shares["key_components"]
-        for i in range(0,key_sharing.T):
-            key_component = KeyComponent(ctypes.c_char_p(key_components[i]["k"].encode("utf-8")), ctypes.c_int(key_components[i]["x"]))
-            key_component_array[i] = key_component
-        key_sharing.key_component = ctypes.cast(key_component_array, ctypes.POINTER(KeyComponent))
-        return key_sharing
-
-    def reconstruct_key(self, shares):
+    def reconstruct_key(self, key_sharing):
         """Reconstruct the secret key from collected shares
 
         Args:
@@ -116,13 +147,29 @@ class ServerHandler:
         Return:
             key (str): recontructed key
         """
-        return self.key_reconstruction_phase(self.convert_shares_to_key_sharing(shares)).decode("utf-8")
+        return self.key_reconstruction_phase(key_sharing).decode("utf-8")
 
-    def collect_shares(self):
-        pass
+    def collect_shares(self, share):
+        """return code:
+               100. client_id is not exist
+               200. client id sent share
+               300. send share successful
+               """
+        client_id = share["client_id"]
+        if self.check_client_id_exist(client_id):
+            if self.check_client_id_not_sent_share(client_id):
+                self.collected_shares.append(share)
+                self.list_client_sent_share.append(client_id)
+                return 300
+            else:
+                return 200
+        else:
+            return 100
+
+
 
     def distribute_share(self, client_id):
-        if self.check_client_id(client_id):
+        if self.check_client_id_exist(client_id):
             if self.check_client_id_not_received_share(client_id):
                 share = self.shares.pop(0)
                 self.list_client_received_share.append(client_id)
@@ -137,7 +184,7 @@ class ServerHandler:
         300. still have share is not distributed
         400. request open is accepted
         """
-        if self.check_client_id(client_id):
+        if self.check_client_id_exist(client_id):
             if self.file_detail["owner_id"] != client_id:
                 return 200
             else:
