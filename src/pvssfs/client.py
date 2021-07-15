@@ -16,7 +16,10 @@ class ClientHandler:
 
     def __init__(self):
         self.client_id = requests.get(config.API_ENDPOINT + "get_client_id/").json()["client_id"]
-
+        if(self.client_id != None):
+            print("get client id successful")
+        else:
+            print('cannot get client id')
         # load lib
         _path = os.path.join(config.CLIENT_LIB_PATH)
         _mod = ctypes.cdll.LoadLibrary(_path)
@@ -76,12 +79,16 @@ class ClientHandler:
         r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id':self.client_id})
         if r.json() != None:
             self.share = r.json()
+            print("get share successful")
+        else:
+            print("cannot get share")
 
     def send_share(self, share):
         pass
 
     def request_open(self):
-        pass
+        r = requests.get(config.API_ENDPOINT +"request_open/", params={'client_id':self.client_id})
+        print(r)
 
     def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
         f = open(file_path, 'rb')
