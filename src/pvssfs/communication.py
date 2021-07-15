@@ -22,10 +22,6 @@ class AES_key(BaseModel):
     plain_file_path: str
 
 
-class Client_info(BaseModel):
-    client_id: str
-
-
 @app.get("/get_client_id/")
 def get_cient_id():
     # Server generate client_id for new client
@@ -55,15 +51,15 @@ def send_key(key: AES_key):
     
     
 @app.get("/get_share/")
-def get_share(client_info: Client_info):
+def get_share(client_id):
     # Server generate shares, then distribute each share to each shareholder
     resp = {}
     if phase != 2:
         print("cannot get share")
-        return resp
+        return None
     else:
         # client_info = json.loads(client_info.json())
-        print(client_info)
+        resp = server.distribute_share(client_id)
         return resp
 
 

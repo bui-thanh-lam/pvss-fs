@@ -31,6 +31,8 @@ class ClientHandler:
         self.decryptor.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p)
         self.decryptor.restype = ctypes.c_void_p
 
+        self.share = {}
+
     def encrypt_file(self, plain_file_path, cipher_file_path):
         """Encrypt file by AES in CTR mode
 
@@ -71,11 +73,9 @@ class ClientHandler:
         r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
 
     def get_share(self):
-        client_info = {}
-        client_info["client_id"] = self.client_id
-        print(client_info)
-        client_info = json.dumps(client_info)
-        r = requests.get(config.API_ENDPOINT + "get_share/", data=client_info)
+        r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id':self.client_id})
+        if(r.json() != None):
+            self.share = r.json()
 
     def send_share(self, share):
         pass

@@ -32,8 +32,9 @@ class ServerHandler:
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
         self.file_detail = {}
-        self.key_components = []
+        self.shares = []
         self.list_client = []
+        self.list_client_received_share = []
 
     def check_client_id(self, client_id):
         return client_id in self.list_client
@@ -68,8 +69,8 @@ class ServerHandler:
             file_detail["p"] = shares["p"]
             self.file_detail = file_detail
             print(self.file_detail)
-            self.key_components = shares["key_components"]
-            print(self.key_components)
+            self.shares = shares["key_components"]
+            print(self.shares)
             return True
         return False
 
@@ -133,8 +134,14 @@ class ServerHandler:
     def collect_shares(self):
         pass
 
-    def distribute_share(self, share, shareholder_id):
-        pass
+    def distribute_share(self, client_id):
+        if self.check_client_id(client_id):
+            if(client_id not in self.list_client_received_share):
+                share = self.shares.pop(1)
+                self.list_client_received_share.append(str(client_id))
+                return share
+
+        return None
 
     def distribute_client_id(self):
         self.current_client_id += 1
