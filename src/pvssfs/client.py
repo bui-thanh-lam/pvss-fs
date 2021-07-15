@@ -11,7 +11,7 @@ class ClientHandler:
         self._get_client_id()
         
         # load lib
-        _path = os.path.join(config.CLIENT_LIB_PATH)
+        _path = os.path.join(config.CONFIG["CLIENT_LIB_PATH"])
         _mod = ctypes.cdll.LoadLibrary(_path)
 
         # char *Encrypt_File(char *input, char *output)
@@ -30,7 +30,7 @@ class ClientHandler:
         self._encrypt_key = None
 
     def _get_client_id(self):
-        r = requests.get(config.API_ENDPOINT + "get_client_id/")
+        r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_client_id/")
         self._log(r)
         self.client_id = r.json()["client_id"]
         
@@ -43,8 +43,8 @@ class ClientHandler:
 
     def encrypt_file(
         self,
-        plain_file_path=config.TEST_DOCUMENT_PATH, 
-        cipher_file_path=config.TEST_DECRYPTED_DOC_PATH
+        plain_file_path=config.CONFIG["TEST_DOCUMENT_PATH"], 
+        cipher_file_path=config.CONFIG["TEST_DECRYPTED_DOC_PATH"]
     ):
         """Encrypt file by AES in CTR mode
 
@@ -95,11 +95,11 @@ class ClientHandler:
             AES_key["cipher_file_path"] = self._encrypt_key["cipher_file_path"]
             self._encrypt_key = None
             AES_key = json.dumps(AES_key)
-            r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
+            r = requests.post(config.config["API_ENDPOINT"] + "send_key/", data=AES_key)
             self._log(r)
 
     def get_share(self):
-        r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id': self.client_id})
+        r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_share/", params={'client_id': self.client_id})
         self._log(r) 
         try:
             self.share = r.json()
@@ -113,7 +113,7 @@ class ClientHandler:
             share = self.share
             share["client_id"] = self.client_id
             share = json.dumps(self.share)
-            r = requests.post(config.API_ENDPOINT + "send_share/", data=share)
+            r = requests.post(config.CONFIG["API_ENDPOINT"] + "send_share/", data=share)
             self._log(r) 
 
     def request_open(self):
@@ -121,17 +121,17 @@ class ClientHandler:
             print("You or other shareholders have not received your/their share yet. Please wait util all shareholders have received their share.")
         else:
             r = requests.post(
-                config.API_ENDPOINT + "request_open/", 
+                config.CONFIG["API_ENDPOINT"] + "request_open/", 
                 params={
                     'client_id': self.client_id
                 }
             )
             self._log(r)
 
-    def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
+    def send_file(self, file_path=config.CONFIG["TEST_DOCUMENT_PATH"]):
         f = open(file_path, 'rb')
         r = requests.post(
-            config.API_ENDPOINT + "send_file/",
+            config.CONFIG["API_ENDPOINT"] + "send_file/",
             params={
                 'client_id': self.client_id
             },
@@ -143,7 +143,7 @@ class ClientHandler:
 
     def download_file(self):
         r = requests.get(
-            config.API_ENDPOINT + "download_file/",
+            config.CONFIG["API_ENDPOINT"] + "download_file/",
             params={
                 'client_id': self.client_id
             }
@@ -151,7 +151,7 @@ class ClientHandler:
         print(f"Downloaded file: {r.content}")
 
     def get_key(self):
-        r = requests.get(config.API_ENDPOINT + "get_key/", params={'client_id': self.client_id})
+        r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_key/", params={'client_id': self.client_id})
         self._log(r)      
         try:
             self._decrypt_key = r.json()['key']

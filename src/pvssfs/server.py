@@ -37,7 +37,7 @@ class ServerHandler:
         self.n_clients = 0
 
         # load lib
-        _mod = ctypes.cdll.LoadLibrary(config.SERVER_LIB_PATH)
+        _mod = ctypes.cdll.LoadLibrary(config.CONFIG["SERVER_LIB_PATH"])
 
         # KeySharing key_sharing_phase(char* S, int N, int T)
         self.key_sharing_phase = _mod.key_sharing_phase
@@ -221,7 +221,7 @@ class ServerHandler:
         return client_id
 
     def receive_file(self, file):
-        server_filename = config.STORAGE_PATH+"/"+file.filename.replace(" ", "_")
+        server_filename = config.CONFIG["STORAGE_PATH"]+"/"+file.filename.replace(" ", "_")
         with open(server_filename,'wb+') as f:
             f.write(file.file.read())
             f.close()
