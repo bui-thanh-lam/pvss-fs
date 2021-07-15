@@ -38,8 +38,8 @@ class ServerHandler:
         self.collected_shares = []
 
         self.client_ids = []
-        self.list_client_received_share = []
-        self.list_client_sent_share = []
+        self.client_received_shares = []
+        self.client_sent_shares = []
 
 
 
@@ -48,7 +48,7 @@ class ServerHandler:
 
 
     def check_client_id_not_received_share(self, client_id):
-        return client_id not in self.list_client_received_share
+        return client_id not in self.client_received_shares
 
 
     def check_client_id_not_sent_share(self,client_id):
@@ -159,7 +159,7 @@ class ServerHandler:
         if self.check_client_id_exist(client_id):
             if self.check_client_id_not_sent_share(client_id):
                 self.collected_shares.append(share)
-                self.list_client_sent_share.append(client_id)
+                self.client_sent_shares.append(client_id)
                 return 300
             else:
                 return 200
@@ -172,7 +172,7 @@ class ServerHandler:
         if self.check_client_id_exist(client_id):
             if self.check_client_id_not_received_share(client_id):
                 share = self.shares.pop(0)
-                self.list_client_received_share.append(client_id)
+                self.client_received_shares.append(client_id)
                 return share
         return None
 
