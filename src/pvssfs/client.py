@@ -68,7 +68,7 @@ class ClientHandler:
                 plain_file_path (str): the path to desired plain file after decryption
                 key (str): the a AES key in hex code
         """
-        if self.key == None:
+        if self.decrypt_key == None:
             print("You do not have key")
         else:
             print("decrypting file . . . ")
@@ -143,6 +143,8 @@ class ClientHandler:
             print("client id is not owner")
         elif resp["status_code"] == 300:
             print("do not collect enough share")
+        elif resp["status_code"] == 500:
+            print("not the time to reconstruct key")
         else:
             print("get key successful")
             self.decrypt_key = resp

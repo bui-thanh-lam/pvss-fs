@@ -143,11 +143,13 @@ def get_key(client_id):
                            200. client id is not owner
                            300. do not collect enough share
                            400. get key successful
+                           500. not the time to reconstruct key
                            """
     resp = {}
     global phase
     if phase != 3:
-        resp["message"] = "cannot get key"
+        resp["status_code"] = 500
+        resp["message"] = "not the time to reconstruct key"
     else:
         resp = server.get_key(client_id)
         if resp["status_code"] == 100:
