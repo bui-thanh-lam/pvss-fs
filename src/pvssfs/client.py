@@ -16,7 +16,7 @@ class ClientHandler:
 
     def __init__(self):
         self.client_id = requests.get(config.API_ENDPOINT + "get_client_id/").json()["client_id"]
-        if(self.client_id != None):
+        if (self.client_id != None):
             print("get client id successful")
         else:
             print('cannot get client id')
@@ -78,21 +78,22 @@ class ClientHandler:
             self.decryptor(cipher_file_path, plain_file_path, key)
             print("decrypt successful")
 
-
     def send_key(self):
-        AES_key = {}
-        AES_key["key"] = self.encrypt_key["key"]
-        AES_key["client_id"] = str(self.client_id)
-        AES_key["plain_file_path"] = self.encrypt_key["plain_file_path"]
-        AES_key["cipher_file_path"] = self.encrypt_key["cipher_file_path"]
-        self.encrypt_key = None
-        AES_key = json.dumps(AES_key)
-        r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
-        print(r.json())
-
+        if self.encrypt_key == None:
+            print("You do not have key to send")
+        else:
+            AES_key = {}
+            AES_key["key"] = self.encrypt_key["key"]
+            AES_key["client_id"] = str(self.client_id)
+            AES_key["plain_file_path"] = self.encrypt_key["plain_file_path"]
+            AES_key["cipher_file_path"] = self.encrypt_key["cipher_file_path"]
+            self.encrypt_key = None
+            AES_key = json.dumps(AES_key)
+            r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
+            print(r.json())
 
     def get_share(self):
-        r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id':self.client_id})
+        r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id': self.client_id})
         if r.json() != None:
             self.share = r.json()
             print("get share successful")
@@ -109,7 +110,7 @@ class ClientHandler:
             print(r.json())
 
     def request_open(self):
-        r = requests.get(config.API_ENDPOINT +"request_open/", params={'client_id':self.client_id})
+        r = requests.get(config.API_ENDPOINT + "request_open/", params={'client_id': self.client_id})
         print(r.json())
 
     def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
@@ -134,11 +135,11 @@ class ClientHandler:
         print(response.content.decode("utf-8"))
 
     def get_key(self):
-        r = requests.get(config.API_ENDPOINT + "get_key/", params={'client_id':self.client_id})
+        r = requests.get(config.API_ENDPOINT + "get_key/", params={'client_id': self.client_id})
         resp = r.json()
         if resp["status_code"] == 100:
             print("client id is not exist")
-        elif resp["status_code"] ==  200:
+        elif resp["status_code"] == 200:
             print("client id is not owner")
         elif resp["status_code"] == 300:
             print("do not collect enough share")
