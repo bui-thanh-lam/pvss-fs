@@ -33,6 +33,11 @@ class ServerHandler:
 
         self.file_detail = {}
         self.key_components = []
+        self.list_client = []
+
+    def check_client_id(self, client_id):
+        print(self.list_client)
+        return client_id in self.list_client
 
     def compute_shares(self, AES_key):
         """Compute shares given a key
@@ -45,26 +50,29 @@ class ServerHandler:
         Return:
             shares (json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
         """
+        client_id = AES_key["client_id"]
+        if(self.check_client_id(client_id)):
+            S = AES_key["key"]
+            S = ctypes.c_char_p(S.encode("utf-8"))
+            N = ctypes.c_int(self.current_client_id)
+            T = int(self.current_client_id / 2)
+            T = ctypes.c_int(T)
 
-        S = AES_key["key"]
-        S = ctypes.c_char_p(S.encode("utf-8"))
-        N = ctypes.c_int(self.current_client_id)
-        T = int(self.current_client_id/2)
-        T = ctypes.c_int(T)
+            shares = self.convert_key_sharing_to_json_form(self.key_sharing_phase(S, N, T))
 
-        shares = self.convert_key_sharing_to_json_form(self.key_sharing_phase(S, N, T))
-
-        file_detail = {}
-        file_detail["plain_file_path"] = AES_key["plain_file_path"]
-        file_detail["cipher_file_path"] = AES_key["cipher_file_path"]
-        file_detail["owner_id"] = AES_key["client_id"]
-        file_detail["N"] = shares["N"]
-        file_detail["T"] = shares["T"]
-        file_detail["p"] = shares["p"]
-        self.file_detail = file_detail
-        print(self.file_detail)
-        self.key_components = shares["key_components"]
-        print(self.key_components)
+            file_detail = {}
+            file_detail["plain_file_path"] = AES_key["plain_file_path"]
+            file_detail["cipher_file_path"] = AES_key["cipher_file_path"]
+            file_detail["owner_id"] = AES_key["client_id"]
+            file_detail["N"] = shares["N"]
+            file_detail["T"] = shares["T"]
+            file_detail["p"] = shares["p"]
+            self.file_detail = file_detail
+            print(self.file_detail)
+            self.key_components = shares["key_components"]
+            print(self.key_components)
+            return True
+        return False
 
     def convert_key_sharing_to_json_form(self, key_sharing):
         """Convert the key_sharing (struct KeySharing) to json form
@@ -131,6 +139,7 @@ class ServerHandler:
 
     def distribute_client_id(self):
         self.current_client_id += 1
+        self.list_client.append(str(self.current_client_id))
         return self.current_client_id
 
     def receive_file(self, file):

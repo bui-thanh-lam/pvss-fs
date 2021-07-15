@@ -63,22 +63,23 @@ class ClientHandler:
     def send_key(self, key, plain_file_path, cipher_file_path):
         AES_key = {}
         AES_key["key"] = key
-        AES_key["client_id"] = self.client_id
+        AES_key["client_id"] = str(self.client_id)
         AES_key["plain_file_path"] = plain_file_path
         AES_key["cipher_file_path"] = cipher_file_path
         AES_key = json.dumps(AES_key)
         print(AES_key)
-        r = requests.post(config.API_ENDPOINT+"send_key/", data = AES_key)
+        r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
+
+    def get_share(self):
+        client_info = {}
+        client_info["client_id"] = self.client_id
+        print(client_info)
+        client_info = json.dumps(client_info)
+        r = requests.get(config.API_ENDPOINT + "get_share/", data=client_info)
 
     def send_share(self, share):
         pass
 
-    def get_key(self):
-        pass
-
-    def get_share(self):
-        pass
-    
     def request_open(self):
         pass
 
@@ -93,7 +94,6 @@ class ClientHandler:
                 'file': ('test.txt', f, 'multipart/form-data'),
             }
         )
-    
+
     def download_file(self):
         pass
-

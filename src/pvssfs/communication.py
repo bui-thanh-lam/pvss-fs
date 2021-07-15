@@ -13,11 +13,17 @@ phase = 1
 2. key sharing phase
 3. key reconstruction phase
 """
+
+
 class AES_key(BaseModel):
-    client_id: int
+    client_id: str
     key: str
     cipher_file_path: str
     plain_file_path: str
+
+
+class Client_info(BaseModel):
+    client_id: str
 
 
 @app.get("/get_client_id/")
@@ -40,16 +46,25 @@ def send_key(key: AES_key):
     if (phase == 1):
         key = json.loads(key.json())
         print(key)
-        shares = server.compute_shares(key)
-        phase = 2
+        if(server.compute_shares(key)):
+            phase = 2
+        else:
+            print("client id is not exist")
     else:
         print("cannot sharing file")
     
     
 @app.get("/get_share/")
-def get_key():
+def get_share(client_info: Client_info):
     # Server generate shares, then distribute each share to each shareholder
-    pass    
+    resp = {}
+    if phase != 2:
+        print("cannot get share")
+        return resp
+    else:
+        # client_info = json.loads(client_info.json())
+        print(client_info)
+        return resp
 
 
 @app.post("/request_open/")
