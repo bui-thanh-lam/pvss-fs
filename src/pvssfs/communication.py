@@ -64,9 +64,13 @@ def get_share(client_id):
 
 
 @app.post("/request_open/")
-def request_open(share: str):
+def request_open(client_id):
     # Server check if the requester is the owner or not
     # If True, receive his share and start collecting other shares
+    if phase != 2:
+        print("cannot request open")
+    else:
+        pass
     pass
 
 

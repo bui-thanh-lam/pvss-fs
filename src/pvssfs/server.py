@@ -41,7 +41,7 @@ class ServerHandler:
         return client_id in self.list_client
 
     def check_client_id_received_share(self, client_id):
-        return client_id in self.list_client_received_share
+        return client_id not in self.list_client_received_share
 
     def compute_shares(self, AES_key):
         """Compute shares given a key
