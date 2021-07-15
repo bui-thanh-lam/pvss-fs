@@ -1,7 +1,8 @@
 import os
 import ctypes
 import config
-
+import hashlib
+import time
 
 class KeyComponent(ctypes.Structure):
     _fields_ = [('k', ctypes.c_char_p), ('x', ctypes.c_int)]
@@ -16,7 +17,7 @@ class ServerHandler:
 
     def __init__(self):
         # init client_id
-        self.current_client_id = 0
+        self.amount_client= 0
 
         # load lib
         _mod = ctypes.cdll.LoadLibrary(config.SERVER_LIB_PATH)
@@ -39,6 +40,9 @@ class ServerHandler:
     def check_client_id(self, client_id):
         return client_id in self.list_client
 
+    def check_client_id_received_share(self, client_id):
+        return client_id in self.list_client_received_share
+
     def compute_shares(self, AES_key):
         """Compute shares given a key
 
@@ -54,8 +58,8 @@ class ServerHandler:
         if(self.check_client_id(client_id)):
             S = AES_key["key"]
             S = ctypes.c_char_p(S.encode("utf-8"))
-            N = ctypes.c_int(self.current_client_id)
-            T = int(self.current_client_id / 2)
+            N = ctypes.c_int(self.amount_client)
+            T = int(self.amount_client/ 2)
             T = ctypes.c_int(T)
 
             shares = self.convert_key_sharing_to_json_form(self.key_sharing_phase(S, N, T))
@@ -136,17 +140,17 @@ class ServerHandler:
 
     def distribute_share(self, client_id):
         if self.check_client_id(client_id):
-            if(client_id not in self.list_client_received_share):
+            if(self.check_client_id_received_share(client_id)):
                 share = self.shares.pop(1)
-                self.list_client_received_share.append(str(client_id))
+                self.list_client_received_share.append(client_id)
                 return share
-
         return None
 
     def distribute_client_id(self):
-        self.current_client_id += 1
-        self.list_client.append(str(self.current_client_id))
-        return self.current_client_id
+        self.amount_client+= 1
+        client_id = hashlib.sha256( (str(self.amount_client) + str(time.time())).encode("utf-8")).hexdigest()
+        self.list_client.append(client_id)
+        return client_id
 
     def receive_file(self, file):
         server_filename = config.STORAGE_PATH+"/"+file.filename.replace(" ", "_")
