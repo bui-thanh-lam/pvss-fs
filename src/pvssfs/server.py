@@ -40,7 +40,7 @@ class ServerHandler:
     def check_client_id(self, client_id):
         return client_id in self.list_client
 
-    def check_client_id_received_share(self, client_id):
+    def check_client_id_not_received_share(self, client_id):
         return client_id not in self.list_client_received_share
 
     def compute_shares(self, AES_key):
@@ -123,7 +123,7 @@ class ServerHandler:
 
     def distribute_share(self, client_id):
         if self.check_client_id(client_id):
-            if(self.check_client_id_received_share(client_id)):
+            if(self.check_client_id_not_received_share(client_id)):
                 share = self.shares.pop(1)
                 self.list_client_received_share.append(client_id)
                 return share
