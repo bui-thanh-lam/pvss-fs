@@ -62,44 +62,27 @@ class ServerHandler:
             T = int(self.amount_client/ 2)
             T = ctypes.c_int(T)
 
-            shares = self.convert_key_sharing_to_json_form(self.key_sharing_phase(S, N, T))
+            key_sharing = self.key_sharing_phase(S, N, T)
 
             file_detail = {}
             file_detail["plain_file_path"] = AES_key["plain_file_path"]
             file_detail["cipher_file_path"] = AES_key["cipher_file_path"]
             file_detail["owner_id"] = AES_key["client_id"]
-            file_detail["N"] = shares["N"]
-            file_detail["T"] = shares["T"]
-            file_detail["p"] = shares["p"]
+            file_detail["N"] = key_sharing.N
+            file_detail["T"] = key_sharing.T
+            file_detail["p"] = key_sharing.p.decode("utf-8")
+            key_components = []
+            for i in range(0, key_sharing.N):
+                key_component = {}
+                key_component["x"] = key_sharing.key_component[i].x
+                key_component["k"] = key_sharing.key_component[i].k.decode("utf-8")
+                key_components.append(key_component)
+            self.shares = key_components
             self.file_detail = file_detail
             print(self.file_detail)
-            self.shares = shares["key_components"]
             print(self.shares)
             return True
         return False
-
-    def convert_key_sharing_to_json_form(self, key_sharing):
-        """Convert the key_sharing (struct KeySharing) to json form
-
-               Args:
-                   key_sharing: KeySharing
-
-               Return:
-                   shares(json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
-               """
-        shares = {}
-        shares["N"] = key_sharing.N
-        shares["T"] = key_sharing.T
-        shares["p"] = key_sharing.p.decode("utf-8")
-        key_components = []
-        for i in range(0,key_sharing.N):
-            key_component = {}
-            key_component["x"] = key_sharing.key_component[i].x
-            key_component["k"] = key_sharing.key_component[i].k.decode("utf-8")
-            key_components.append(key_component)
-        shares["key_components"] = key_components
-        return shares
-
 
     def convert_shares_to_key_sharing(self, shares):
         """Convert the shares (json form) to struct KeySharing
