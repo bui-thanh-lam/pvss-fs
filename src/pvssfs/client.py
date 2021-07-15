@@ -52,11 +52,11 @@ class ClientHandler:
         plain_file_path = ctypes.c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
         key = self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
-        os.remove(plain_file_path)
         self.encrypt_key = {}
         self.encrypt_key["key"] = key
         self.encrypt_key["plain_file_path"] = plain_file_path.value.decode("utf-8")
         self.encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
+        os.remove(self.encrypt_key["plain_file_path"])
 
     def decrypt_file(self, cipher_file_path, plain_file_path, key):
         """Decrypt file by AES in CTR mode
