@@ -36,6 +36,9 @@ class ClientHandler:
 
         self.share = None
 
+        self.decrypt_key = None
+        self.encrypt_key = None
+
     def encrypt_file(self, plain_file_path, cipher_file_path):
         """Encrypt file by AES in CTR mode
 
@@ -49,7 +52,11 @@ class ClientHandler:
         plain_file_path = ctypes.c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
         key = self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
-        self.send_key(key, plain_file_path.value.decode("utf-8"), cipher_file_path.value.decode("utf-8"))
+        os.remove(plain_file_path)
+        self.encrypt_key = {}
+        self.encrypt_key["key"] = key
+        self.encrypt_key["plain_file_path"] = plain_file_path.value.decode("utf-8")
+        self.encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
 
     def decrypt_file(self, cipher_file_path, plain_file_path, key):
         """Decrypt file by AES in CTR mode
@@ -59,21 +66,28 @@ class ClientHandler:
                 plain_file_path (str): the path to desired plain file after decryption
                 key (str): the a AES key in hex code
         """
+        if self.key == None:
+            print("You do not have key")
+        else:
+            print("decrypting file . . . ")
+            cipher_file_path = ctypes.c_char_p(self.decrypt_key["cipher_file_path"].encode("utf-8"))
+            plain_file_path = ctypes.c_char_p(self.decrypt_key["plain_file_path"].encode("utf-8"))
+            key = ctypes.c_char_p(self.decrypt_key["key"].encode("utf-8"))
+            self.decryptor(cipher_file_path, plain_file_path, key)
+            print("decrypt successful")
 
-        cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
-        plain_file_path = ctypes.c_char_p(plain_file_path.encode("utf-8"))
-        key = ctypes.c_char_p(key.encode("utf-8"))
-        return self.decryptor(cipher_file_path, plain_file_path, key)
 
-    def send_key(self, key, plain_file_path, cipher_file_path):
+    def send_key(self):
         AES_key = {}
-        AES_key["key"] = key
+        AES_key["key"] = self.encrypt_key["key"]
         AES_key["client_id"] = str(self.client_id)
-        AES_key["plain_file_path"] = plain_file_path
-        AES_key["cipher_file_path"] = cipher_file_path
+        AES_key["plain_file_path"] = self.encrypt_key["plain_file_path"]
+        AES_key["cipher_file_path"] = self.encrypt_key["cipher_file_path"]
+        self.encrypt_key = None
         AES_key = json.dumps(AES_key)
         r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
         print(r.json())
+
 
     def get_share(self):
         r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id':self.client_id})
@@ -128,7 +142,4 @@ class ClientHandler:
             print("do not collect enough share")
         else:
             print("get key successful")
-            print("decrypting file ...")
-            print(resp)
-            self.decrypt_file(resp["cipher_file_path"], resp["plain_file_path"], resp["key"])
-            print("decrypt successful")
+            self.decrypt_key = resp
