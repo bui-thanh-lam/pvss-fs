@@ -1,7 +1,6 @@
 import os
 import ctypes
 import config
-import pprint
 
 
 class KeyComponent(ctypes.Structure):
@@ -114,14 +113,20 @@ class ServerHandler:
 
     def distribute_client_id(self):
         self.current_client_id += 1
-        print(self.current_client_id)
         return self.current_client_id
 
-server = ServerHandler()
-S = "3CE7C3C862457688D415D34753A446D0"
-N = 10
-T = 5
-shares = server.compute_shares(S, N, T)
-pprint.pprint(shares)
+    def receive_file(self, file):
+        server_filename = config.STORAGE_PATH+"/"+file.filename.replace(" ", "_")
+        with open(server_filename,'wb+') as f:
+            f.write(file.file.read())
+            f.close()
+        setattr(self, 'filename', file.filename)
+
+# server = ServerHandler()
+# S = "3CE7C3C862457688D415D34753A446D0"
+# N = 10
+# T = 5
+# shares = server.compute_shares(S, N, T)
+# pprint.pprint(shares)
 # reconstructed_key = server.reconstruct_key(shares)
 # print(reconstructed_key)

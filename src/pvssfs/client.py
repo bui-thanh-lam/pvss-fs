@@ -15,8 +15,8 @@ class ClientHandler:
 
     def __init__(self):
 
-        # self.client_id = self.get_client_id()
-        self.client_id = requests.get("http://localhost:8001/get_client_id").content.decode("utf-8")
+        self.client_id = 0
+        # self.client_id = requests.get("http://localhost:8001/get_client_id").content.decode("utf-8")
 
         # load lib
         _path = os.path.join(config.CLIENT_LIB_PATH)
@@ -31,8 +31,6 @@ class ClientHandler:
         self.decryptor = _mod.Decrypt_File
         self.decryptor.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p)
         self.decryptor.restype = ctypes.c_void_p
-
-
 
     def encrypt_file(self, plain_file_path, cipher_file_path):
         """Encrypt file by AES in CTR mode
@@ -73,7 +71,6 @@ class ClientHandler:
         msg["cipher_file_name"] = cipher_file_name
         print(msg)
 
-
     def send_share(self, share):
         pass
 
@@ -86,13 +83,13 @@ class ClientHandler:
     def request_open(self):
         pass
 
+    def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
+        requests.post(
+            config.API_ENDPOINT + "send_file/",
+            files={
+                'file': ('test.txt', open(file_path, 'rb')),
+            }
+        )
     
-
-
-client = ClientHandler()
-key = client.encrypt_file(
-    config.TEST_DOCUMENT_PATH,
-    config.TEST_DECRYPTED_DOC_PATH
-)
-
-# client.decrypt_file(config.TEST_DECRYPTED_DOC_PATH, config.TEST_RECOVERED_DOC_PATH, key)
+    def download_file(self):
+        pass
