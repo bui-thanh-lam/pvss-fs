@@ -123,5 +123,5 @@ N = 10
 T = 5
 shares = server.compute_shares(S, N, T)
 pprint.pprint(shares)
-reconstructed_key = server.reconstruct_key(shares)
-print(reconstructed_key)
+# reconstructed_key = server.reconstruct_key(shares)
+# print(reconstructed_key)
