@@ -6,10 +6,15 @@ from server import ServerHandler
 app = FastAPI()
 server = ServerHandler()
 
+@app.get("/get_client_id")
+def get_cient_id():
+    # Server generate client_id for new client
+    client_id = server.distribute_client_id()
+    return client_id
 
 @app.post("/send_key")
-def send_key(key: str):
-    # Server receive the key and remember the owner
+def send_key(msg):
+    # Server receive the msg:{"client_id":"", "key":"", "plain_file_name":"", "cipher_file_name":""}
     pass
     
     
@@ -50,3 +55,7 @@ def send_file():
 def download_file():
     # Server provide clients with the reconstructed file when they request to download it
     pass
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="localhost", port=8001)
