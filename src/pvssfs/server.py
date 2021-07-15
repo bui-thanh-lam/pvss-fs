@@ -31,17 +31,23 @@ class ServerHandler:
         self.key_reconstruction_phase.argtypes = [ctypes.POINTER(KeySharing)]
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
-    def compute_shares(self, S, N=3, T=2):
+    def compute_shares(self, AES_key, N=3, T=2):
         """Compute shares given a key
 
         Args:
             S (str): a given key
             N (int): number of shareholders
             T (int): threshold of shareholders to reconstruct the key from their shares
-            
-        Return:
 
+        Return:
+            shares (json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
         """
+        file_detail = {}
+        file_detail["plain_file_path"] = AES_key["plain_file_path"]
+        file_detail["cipher_file_path"] = AES_key["cipher_file_path"]
+        file_detail["owner_id"] = AES_key["client_id"]
+
+        S = AES_key["key"]
         S = ctypes.c_char_p(S.encode("utf-8"))
         N = ctypes.c_int(N)
         T = ctypes.c_int(T)
