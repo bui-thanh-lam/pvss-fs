@@ -1,6 +1,7 @@
 import os
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import FileResponse
 from server import ServerHandler
 from pydantic import BaseModel
 import json
@@ -89,17 +90,17 @@ def get_key():
 
 
 @app.post("/send_file/")
-def send_file(client_id: int, file: UploadFile = File(...)):
-    if client_id == 0:          # If sender is the owner
-        server.receive_file(file)
-        return {
-            'filename': server.filename
-        }
+def send_file(client_id: str, file: UploadFile = File(...)):
+    # if client_id == 0:          # If sender is the owner
+    server.receive_file(file)
+    return {
+        'filename': server.filename
+    }
 
 @app.get("/download_file/")
-def download_file():
-    # Server provide clients with the reconstructed file when they request to download it
-    pass
+def download_file(client_id: str):
+    if client_id in server.client_ids:
+        return FileResponse(server.filename)
 
 
 if __name__ == "__main__":

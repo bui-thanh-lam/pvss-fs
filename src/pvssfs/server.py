@@ -17,7 +17,7 @@ class ServerHandler:
 
     def __init__(self):
         # init client_id
-        self.amount_client= 0
+        self.n_clients = 0
 
         # load lib
         _mod = ctypes.cdll.LoadLibrary(config.SERVER_LIB_PATH)
@@ -34,11 +34,11 @@ class ServerHandler:
 
         self.file_detail = {}
         self.shares = []
-        self.list_client = []
+        self.client_ids = []
         self.list_client_received_share = []
 
     def check_client_id(self, client_id):
-        return client_id in self.list_client
+        return client_id in self.client_ids
 
     def check_client_id_not_received_share(self, client_id):
         return client_id not in self.list_client_received_share
@@ -58,8 +58,8 @@ class ServerHandler:
         if(self.check_client_id(client_id)):
             S = AES_key["key"]
             S = ctypes.c_char_p(S.encode("utf-8"))
-            N = ctypes.c_int(self.amount_client)
-            T = int(self.amount_client/ 2)
+            N = ctypes.c_int(self.n_clients)
+            T = int(self.n_clients/ 2)
             T = ctypes.c_int(T)
 
             key_sharing = self.key_sharing_phase(S, N, T)
@@ -130,9 +130,9 @@ class ServerHandler:
         return None
 
     def distribute_client_id(self):
-        self.amount_client+= 1
-        client_id = hashlib.sha256( (str(self.amount_client) + str(time.time())).encode("utf-8")).hexdigest()
-        self.list_client.append(client_id)
+        self.n_clients += 1
+        client_id = hashlib.sha256( (str(self.n_clients) + str(time.time())).encode("utf-8")).hexdigest()
+        self.client_ids.append(client_id)
         return client_id
 
     def receive_file(self, file):
@@ -140,7 +140,7 @@ class ServerHandler:
         with open(server_filename,'wb+') as f:
             f.write(file.file.read())
             f.close()
-        setattr(self, 'filename', file.filename)
+        setattr(self, 'filename', server_filename)
 
 # server = ServerHandler()
 # S = "3CE7C3C862457688D415D34753A446D0"
