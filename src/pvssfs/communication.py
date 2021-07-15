@@ -16,8 +16,8 @@ phase = 1
 class AES_key(BaseModel):
     client_id: int
     key: str
-    cipher_file_name: str
-    plain_file_name: str
+    cipher_file_path: str
+    plain_file_path: str
 
 
 @app.get("/get_client_id/")
@@ -33,12 +33,13 @@ def get_cient_id():
     return resp
 
 
-@app.post("/send_key")
+@app.post("/send_key/")
 def send_key(key: AES_key):
     # Server receive the AES_key:{"client_id":"", "key":"", "plain_file_name":"", "cipher_file_name":""}
     global phase
     if (phase == 1):
         key = json.loads(key.json())
+        print(key)
         shares = server.compute_shares(key)
         phase = 2
     else:

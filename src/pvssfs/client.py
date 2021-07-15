@@ -15,8 +15,7 @@ class ClientHandler:
     """
 
     def __init__(self):
-        r = requests.get(config.API_ENDPOINT + "get_client_id/").json().deocde("utf-8")["client_id"]
-        self.client_id = type(r)
+        self.client_id = requests.get(config.API_ENDPOINT + "get_client_id/").json()["client_id"]
 
         # load lib
         _path = os.path.join(config.CLIENT_LIB_PATH)
@@ -45,7 +44,7 @@ class ClientHandler:
         plain_file_path = ctypes.c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
         key = self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
-        self.send_key(key, plain_file_path.decode("utf-8"), cipher_file_path.decode("utf-8"))
+        self.send_key(key, plain_file_path.value.decode("utf-8"), cipher_file_path.value.decode("utf-8"))
 
     def decrypt_file(self, cipher_file_path, plain_file_path, key):
         """Decrypt file by AES in CTR mode
@@ -68,6 +67,7 @@ class ClientHandler:
         AES_key["plain_file_path"] = plain_file_path
         AES_key["cipher_file_path"] = cipher_file_path
         AES_key = json.dumps(AES_key)
+        print(AES_key)
         r = requests.post(config.API_ENDPOINT+"send_key/", data = AES_key)
 
     def send_share(self, share):

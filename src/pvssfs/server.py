@@ -16,7 +16,7 @@ class ServerHandler:
 
     def __init__(self):
         # init client_id
-        self.current_client_id = -1
+        self.current_client_id = 0
 
         # load lib
         _mod = ctypes.cdll.LoadLibrary(config.SERVER_LIB_PATH)
@@ -31,7 +31,10 @@ class ServerHandler:
         self.key_reconstruction_phase.argtypes = [ctypes.POINTER(KeySharing)]
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
-    def compute_shares(self, AES_key, N=3, T=2):
+        self.file_detail = {}
+        self.key_components = []
+
+    def compute_shares(self, AES_key):
         """Compute shares given a key
 
         Args:
@@ -42,17 +45,26 @@ class ServerHandler:
         Return:
             shares (json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
         """
+
+        S = AES_key["key"]
+        S = ctypes.c_char_p(S.encode("utf-8"))
+        N = ctypes.c_int(self.current_client_id)
+        T = int(self.current_client_id/2)
+        T = ctypes.c_int(T)
+
+        shares = self.convert_key_sharing_to_json_form(self.key_sharing_phase(S, N, T))
+
         file_detail = {}
         file_detail["plain_file_path"] = AES_key["plain_file_path"]
         file_detail["cipher_file_path"] = AES_key["cipher_file_path"]
         file_detail["owner_id"] = AES_key["client_id"]
-
-        S = AES_key["key"]
-        S = ctypes.c_char_p(S.encode("utf-8"))
-        N = ctypes.c_int(N)
-        T = ctypes.c_int(T)
-        shares = self.convert_key_sharing_to_json_form(self.key_sharing_phase(S, N, T))
-        return shares
+        file_detail["N"] = shares["N"]
+        file_detail["T"] = shares["T"]
+        file_detail["p"] = shares["p"]
+        self.file_detail = file_detail
+        print(self.file_detail)
+        self.key_components = shares["key_components"]
+        print(self.key_components)
 
     def convert_key_sharing_to_json_form(self, key_sharing):
         """Convert the key_sharing (struct KeySharing) to json form
