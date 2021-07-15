@@ -2,21 +2,47 @@ import os
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from server import ServerHandler
-
+from pydantic import BaseModel
+import json
 
 app = FastAPI()
 server = ServerHandler()
+phase = 1
+"""
+1. register phase
+2. key sharing phase
+3. key reconstruction phase
+"""
+class AES_key(BaseModel):
+    client_id: int
+    key: str
+    cipher_file_name: str
+    plain_file_name: str
+
 
 @app.get("/get_client_id/")
 def get_cient_id():
     # Server generate client_id for new client
-    client_id = server.distribute_client_id()
-    return client_id
+    resp = {}
+    if phase == 1:
+        client_id = server.distribute_client_id()
+        resp["client_id"] = client_id
+    else:
+        print("cannot register into file sharing system")
+        resp["client_id"] = -1
+    return resp
 
-@app.post("/send_key/")
-def send_key(msg):
-    # Server receive the msg:{"client_id":"", "key":"", "plain_file_name":"", "cipher_file_name":""}
-    pass
+
+@app.post("/send_key")
+def send_key(key: AES_key):
+    # Server receive the AES_key:{"client_id":"", "key":"", "plain_file_name":"", "cipher_file_name":""}
+    global phase
+    if (phase == 1):
+        key = json.loads(key.json())
+        shares = server.compute_shares(key)
+        phase = 2
+    else:
+        print("cannot sharing file")
     
     
 @app.get("/get_share/")

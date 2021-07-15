@@ -90,7 +90,7 @@ class ServerHandler:
         key_sharing.N = ctypes.c_int(shares["N"])
         key_sharing.T = ctypes.c_int(shares["T"])
         key_sharing.p = ctypes.c_char_p(shares["p"].encode("utf-8"))
-        key_component_array_type = KeyComponent * T
+        key_component_array_type = KeyComponent * key_sharing.T
         key_component_array = key_component_array_type()
 
         key_components = shares["key_components"]

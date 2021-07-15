@@ -2,6 +2,7 @@ import os
 import config
 import requests
 import ctypes
+import json
 
 
 class ClientHandler:
@@ -14,9 +15,8 @@ class ClientHandler:
     """
 
     def __init__(self):
-
-        self.client_id = 0
-        # self.client_id = requests.get("http://localhost:8001/get_client_id").content.decode("utf-8")
+        r = requests.get(config.API_ENDPOINT + "get_client_id/").json().deocde("utf-8")["client_id"]
+        self.client_id = type(r)
 
         # load lib
         _path = os.path.join(config.CLIENT_LIB_PATH)
@@ -42,12 +42,10 @@ class ClientHandler:
             Return:
                 key (str): the aes key in hex code
         """
-        plain_file_name = os.path.basename(plain_file_path)
-        cipher_file_name = os.path.basename(cipher_file_path)
         plain_file_path = ctypes.c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
         key = self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
-        self.send_key(key, plain_file_name, cipher_file_name)
+        self.send_key(key, plain_file_path.decode("utf-8"), cipher_file_path.decode("utf-8"))
 
     def decrypt_file(self, cipher_file_path, plain_file_path, key):
         """Decrypt file by AES in CTR mode
@@ -63,13 +61,14 @@ class ClientHandler:
         key = ctypes.c_char_p(key.encode("utf-8"))
         return self.decryptor(cipher_file_path, plain_file_path, key)
 
-    def send_key(self, key, plain_file_name, cipher_file_name):
-        msg = {}
-        msg["key"] = key
-        msg["client_id"] = self.client_id
-        msg["plain_file_name"] = plain_file_name
-        msg["cipher_file_name"] = cipher_file_name
-        print(msg)
+    def send_key(self, key, plain_file_path, cipher_file_path):
+        AES_key = {}
+        AES_key["key"] = key
+        AES_key["client_id"] = self.client_id
+        AES_key["plain_file_path"] = plain_file_path
+        AES_key["cipher_file_path"] = cipher_file_path
+        AES_key = json.dumps(AES_key)
+        r = requests.post(config.API_ENDPOINT+"send_key/", data = AES_key)
 
     def send_share(self, share):
         pass
@@ -97,3 +96,4 @@ class ClientHandler:
     
     def download_file(self):
         pass
+
