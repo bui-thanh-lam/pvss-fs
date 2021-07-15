@@ -231,7 +231,7 @@ KeySharing _key_sharing_phase(char *S, int N, int T)
     mpz_t k[N];
 
     mpz_init_set_str(a[0], S, 16);
-    gmp_printf("S = %Zd\n", a[0]);
+//    gmp_printf("S = %Zd\n", a[0]);
     generate_function_K(a, p, T);
     calculate_Ki(k, a, p, N, T);
     // for (int i = 0; i < N; i++)
@@ -313,7 +313,7 @@ char* _key_reconstruction_phase(KeySharing keySharing)
     {
         mpz_clear(k_mpz[i].k);
     }
-    gmp_printf("S = %Zd\n", S);
+//    gmp_printf("S = %Zd\n", S);
     return mpz_get_str(NULL, 16, S);
 }
 extern "C"{
