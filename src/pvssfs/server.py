@@ -58,13 +58,8 @@ class ServerHandler:
         if(self.check_client_id(client_id)):
             S = AES_key["key"]
             S = ctypes.c_char_p(S.encode("utf-8"))
-<<<<<<< HEAD
             N = ctypes.c_int(self.n_clients)
             T = int(self.n_clients/ 2)
-=======
-            N = ctypes.c_int(self.amount_client)
-            T = int(self.amount_client/ 2)+1
->>>>>>> d872602220664a6344a3f246f2655480522e2603
             T = ctypes.c_int(T)
 
             key_sharing = self.key_sharing_phase(S, N, T)
