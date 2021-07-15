@@ -73,32 +73,29 @@ class ServerHandler:
 
 
     def convert_shares_to_key_sharing(self, shares):
-        #fixing
         """Convert the shares (json form) to struct KeySharing
 
-                       Args:
-                           shares(json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
+                Args:
+                    shares(json form): {"N":"", "T":"", "p":"","key_components":[{"x":"","k":""},..]}
 
-                       Return:
-                           key_sharing: KeySharing
+                Return:
+                    key_sharing: KeySharing
             """
-        N = shares["N"]
-        T = shares["T"]
-        p = shares["p"]
-        key_component_array = ctypes.POINTER(KeyComponent)
+        key_sharing = KeySharing()
+        key_sharing.N = ctypes.c_int(shares["N"])
+        key_sharing.T = ctypes.c_int(shares["T"])
+        key_sharing.p = ctypes.c_char_p(shares["p"].encode("utf-8"))
+        key_component_array_type = KeyComponent * T
+        key_component_array = key_component_array_type()
+
         key_components = shares["key_components"]
-        for i in range(0,T):
+        for i in range(0,key_sharing.T):
             key_component = KeyComponent(ctypes.c_char_p(key_components[i]["k"].encode("utf-8")), ctypes.c_int(key_components[i]["x"]))
-            key_component_array(key_component)
-        print(key_component_array)
-        for i in range(0,T):
-            print(key_component_array[i].x)
-        # key_sharing = KeySharing(ctypes.c_int(N),ctypes.c_int(T),ctypes.c_char_p(p.encode("utf-8")),key_component_array
-        key_sharing = ""
+            key_component_array[i] = key_component
+        key_sharing.key_component = ctypes.cast(key_component_array, ctypes.POINTER(KeyComponent))
         return key_sharing
 
     def reconstruct_key(self, shares):
-        #fixing
         """Reconstruct the secret key from collected shares
 
         Args:
@@ -107,7 +104,7 @@ class ServerHandler:
         Return:
             key (str): recontructed key
         """
-        return self.key_reconstruction_phase(self.convert_shares_to_key_sharing(shares))
+        return self.key_reconstruction_phase(self.convert_shares_to_key_sharing(shares)).decode("utf-8")
 
     def collect_shares(self):
         pass
@@ -126,5 +123,5 @@ N = 10
 T = 5
 shares = server.compute_shares(S, N, T)
 pprint.pprint(shares)
-# reconstructed_key = server.reconstruct_key(shares)
-# print(reconstructed_key)
+reconstructed_key = server.reconstruct_key(shares)
+print(reconstructed_key)
