@@ -59,7 +59,7 @@ class ServerHandler:
             S = AES_key["key"]
             S = ctypes.c_char_p(S.encode("utf-8"))
             N = ctypes.c_int(self.amount_client)
-            T = int(self.amount_client/ 2)
+            T = int(self.amount_client/ 2)+1
             T = ctypes.c_int(T)
 
             key_sharing = self.key_sharing_phase(S, N, T)
@@ -123,17 +123,38 @@ class ServerHandler:
 
     def distribute_share(self, client_id):
         if self.check_client_id(client_id):
-            if(self.check_client_id_not_received_share(client_id)):
-                share = self.shares.pop(1)
+            if self.check_client_id_not_received_share(client_id):
+                share = self.shares.pop(0)
                 self.list_client_received_share.append(client_id)
                 return share
         return None
+
+
+    def check_request_open(self, client_id):
+        """return code:
+        100. client_id is not exist
+        200. client_id is not owner
+        300. still have share is not distributed
+        400. request open is accepted
+        """
+        if self.check_client_id(client_id):
+            if self.file_detail["owner_id"] != client_id:
+                return 200
+            else:
+                if len(self.shares) != 0:
+                    return 300
+                else:
+                    return 400
+        else:
+            return 100
+
 
     def distribute_client_id(self):
         self.amount_client+= 1
         client_id = hashlib.sha256( (str(self.amount_client) + str(time.time())).encode("utf-8")).hexdigest()
         self.list_client.append(client_id)
         return client_id
+
 
     def receive_file(self, file):
         server_filename = config.STORAGE_PATH+"/"+file.filename.replace(" ", "_")

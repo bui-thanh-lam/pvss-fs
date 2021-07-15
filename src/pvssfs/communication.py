@@ -26,34 +26,44 @@ class AES_key(BaseModel):
 def get_cient_id():
     # Server generate client_id for new client
     resp = {}
+    global phase
     if phase == 1:
         client_id = server.distribute_client_id()
         resp["client_id"] = client_id
     else:
         print("cannot register into file sharing system")
-        resp["client_id"] = -1
+        resp["client_id"] = None
     return resp
 
 
 @app.post("/send_key/")
 def send_key(key: AES_key):
     # Server receive the AES_key:{"client_id":"", "key":"", "plain_file_name":"", "cipher_file_name":""}
+    resp = {}
     global phase
     if (phase == 1):
         key = json.loads(key.json())
-        print(key)
         if(server.compute_shares(key)):
             phase = 2
+            resp["message"] = "key sharing successful"
+            print(resp)
+            return resp
         else:
-            print("client id is not exist")
+            resp["message"] = "client_id is not exist"
+            print(resp)
+            return resp
+
     else:
-        print("cannot sharing file")
+        resp["message"] = "cannot share file"
+        print(resp)
+        return resp
     
     
 @app.get("/get_share/")
 def get_share(client_id):
     # Server generate shares, then distribute each share to each shareholder
     resp = {}
+    global phase
     if phase != 2:
         print("cannot get share")
         return None
@@ -63,15 +73,33 @@ def get_share(client_id):
         return resp
 
 
-@app.post("/request_open/")
+@app.get("/request_open/")
 def request_open(client_id):
     # Server check if the requester is the owner or not
     # If True, receive his share and start collecting other shares
+    """return code:
+            100. client_id is not exist
+            200. client_id is not owner
+            300. still have share is not distributed
+            400. request open is accepted
+            """
+
+    resp = {}
+    global phase
     if phase != 2:
-        print("cannot request open")
+        resp["message"] = "cannot request open"
     else:
-        pass
-    pass
+        res = server.check_request_open(client_id)
+        if res == 100:
+            resp["message"] = "client id is not exist"
+        elif res == 200:
+            resp["message"] = "client id is not owner"
+        elif res == 300:
+            resp["message"] = "still have share is not distributed"
+        else:
+            resp["message"] = "request open is accepted"
+            phase = 3
+    return resp
 
 
 @app.post("/send_share/")
