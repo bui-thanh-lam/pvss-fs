@@ -36,7 +36,6 @@ class ServerHandler:
         self.list_client = []
 
     def check_client_id(self, client_id):
-        print(self.list_client)
         return client_id in self.list_client
 
     def compute_shares(self, AES_key):
