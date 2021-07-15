@@ -13,6 +13,7 @@ phase = 1
 1. register phase
 2. key sharing phase
 3. key reconstruction phase
+4. download phase
 """
 
 
@@ -157,6 +158,7 @@ def get_key(client_id):
             resp["message"] = "do not collect enough share"
         else:
             resp["message"] ="get key successful"
+            phase = 4
     print(resp["message"])
     return resp
 
