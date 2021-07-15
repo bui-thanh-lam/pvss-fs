@@ -60,7 +60,7 @@ class ClientHandler:
         self.encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
         os.remove(self.encrypt_key["plain_file_path"])
 
-    def decrypt_file(self, cipher_file_path, plain_file_path, key):
+    def decrypt_file(self):
         """Decrypt file by AES in CTR mode
 
             Args:
