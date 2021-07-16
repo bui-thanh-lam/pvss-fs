@@ -26,8 +26,8 @@ class ClientHandler:
 
         self.share = None
 
-        self._decrypt_key = None
-        self._encrypt_key = None
+        self.__decrypt_key = None
+        self.__encrypt_key = None
 
     def _get_client_id(self):
         r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_client_id/")
@@ -60,11 +60,11 @@ class ClientHandler:
         cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
         key = self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
         print("Finish encryption")
-        self._encrypt_key = {}
-        self._encrypt_key["key"] = key
-        self._encrypt_key["plain_file_path"] = plain_file_path.value.decode("utf-8")
-        self._encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
-        os.remove(self._encrypt_key["plain_file_path"])
+        self.__encrypt_key = {}
+        self.__encrypt_key["key"] = key
+        self.__encrypt_key["plain_file_path"] = plain_file_path.value.decode("utf-8")
+        self.__encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
+        os.remove(self.__encrypt_key["plain_file_path"])
 
     def decrypt_file(self):
         """Decrypt file by AES in CTR mode
@@ -74,26 +74,28 @@ class ClientHandler:
                 plain_file_path (str): the path to desired plain file after decryption
                 key (str): the a AES key in hex code
         """
-        if self._decrypt_key == None:
+        if self.__decrypt_key == None:
             print("You do not have the key to decrypt. Please send a open request to server to get the key.")
         else:
             print("Decrypting file . . . ")
-            cipher_file_path = ctypes.c_char_p(self._decrypt_key["cipher_file_path"].encode("utf-8"))
-            plain_file_path = ctypes.c_char_p(self._decrypt_key["plain_file_path"].encode("utf-8"))
-            key = ctypes.c_char_p(self._decrypt_key["key"].encode("utf-8"))
+            print(self.__decrypt_key)
+            cipher_file_path = ctypes.c_char_p(self.__decrypt_key["cipher_file_path"].encode("utf-8"))
+            plain_file_path = ctypes.c_char_p(self.__decrypt_key["plain_file_path"].encode("utf-8"))
+            key = ctypes.c_char_p(self.__decrypt_key["key"].encode("utf-8"))
             self.decryptor(cipher_file_path, plain_file_path, key)
             print("Finish decryption")
+            os.remove(self.__decrypt_key["cipher_file_path"])
 
     def send_key(self):
-        if self._encrypt_key == None:
+        if self.__encrypt_key == None:
             print("You do not have a key to send. Please encrypt your file first.")
         else:
             AES_key = {}
-            AES_key["key"] = self._encrypt_key["key"]
+            AES_key["key"] = self.__encrypt_key["key"]
             AES_key["client_id"] = str(self.client_id)
-            AES_key["plain_file_path"] = self._encrypt_key["plain_file_path"]
-            AES_key["cipher_file_path"] = self._encrypt_key["cipher_file_path"]
-            self._encrypt_key = None
+            AES_key["plain_file_path"] = self.__encrypt_key["plain_file_path"]
+            AES_key["cipher_file_path"] = self.__encrypt_key["cipher_file_path"]
+            self.__encrypt_key = None
             AES_key = json.dumps(AES_key)
             r = requests.post(config.CONFIG["API_ENDPOINT"] + "send_key/", data=AES_key)
             self._log(r)
@@ -128,18 +130,21 @@ class ClientHandler:
             )
             self._log(r)
 
-    def send_file(self, file_path=config.CONFIG["TEST_DOCUMENT_PATH"]):
-        f = open(file_path, 'rb')
-        r = requests.post(
-            config.CONFIG["API_ENDPOINT"] + "send_file/",
-            params={
-                'client_id': self.client_id
-            },
-            files={
-                'file': ('test.txt', f, 'multipart/form-data'),
-            }
-        )
-        self._log(r)      
+    def send_file(self):
+        if(self.__decrypt_key == None):
+            print("You cannot send file")
+        else:
+            f = open(self.__decrypt_key["plain_file_path"], 'rb')
+            r = requests.post(
+                config.CONFIG["API_ENDPOINT"] + "send_file/",
+                params={
+                    'client_id': self.client_id
+                },
+                files={
+                    'file': ('test.txt', f, 'multipart/form-data'),
+                }
+            )
+            self._log(r)
 
     def download_file(self):
         r = requests.get(
@@ -154,6 +159,6 @@ class ClientHandler:
         r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_key/", params={'client_id': self.client_id})
         self._log(r)      
         try:
-            self._decrypt_key = r.json()['key']
+            self.__decrypt_key = r.json()
         except json.decoder.JSONDecodeError as e:
             raise e

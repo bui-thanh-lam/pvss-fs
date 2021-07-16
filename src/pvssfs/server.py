@@ -49,7 +49,7 @@ class ServerHandler:
         self.key_reconstruction_phase.argtypes = [ctypes.POINTER(KeySharing)]
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
-        self.file_detail = {}
+        self.file_detail = None
 
         self.shares = []
         self.collected_shares = []
@@ -88,11 +88,14 @@ class ServerHandler:
                     key_component_array_type = KeyComponent * key_sharing.T
                     key_component_array = key_component_array_type()
                     for i in range(0, key_sharing.T):
-                        key_component = KeyComponent(ctypes.c_char_p(self.collected_shares[i]["k"].encode("utf-8")),
-                                                     ctypes.c_int(self.collected_shares[i]["x"]))
+                        key_component = KeyComponent(ctypes.c_char_p(self.collected_shares[i].k.encode("utf-8")),
+                                                     ctypes.c_int(self.collected_shares[i].x))
                         key_component_array[i] = key_component
                     key_sharing.key_component = ctypes.cast(key_component_array, ctypes.POINTER(KeyComponent))
+                    # key = {}
                     key = self._reconstruct_key(key_sharing)
+                    # key["plain_file_path"] = self.file_detail.plain_file_path
+                    # key["cipher_file_path"] = self.file_detail.cipher_file_path
                     return key
                 else:
                     raise Exception("Insufficient shares to reconstruct")
@@ -206,9 +209,10 @@ class ServerHandler:
     def check_request_open(self, client_id):
         if self._is_valid_client_id(client_id):
             if self.file_detail.owner_id == client_id:
-                return True
-            elif len(self.shares) != 0:
-                raise Exception("Shares have not been distributed yet")
+                if len(self.shares) == 0:
+                    return True
+                else:
+                    raise Exception("Shares have not been distributed yet")
             else:
                 raise Exception("This client is not the owner")
         else:
