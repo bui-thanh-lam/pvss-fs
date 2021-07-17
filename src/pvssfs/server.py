@@ -65,7 +65,7 @@ class ServerHandler:
         return client_id in self.client_received_shares
 
     def _has_sent_share(self,client_id):
-        return client_id in self.collected_shares
+        return client_id in self.client_sent_shares
 
     def _has_enough_shares(self):
         return len(self.collected_shares) >= self.file_detail.T
