@@ -101,7 +101,7 @@ def get_key(client_id: str):
 
     global phase
     if phase != 3:
-        raise Exception("Cannot send key to owner at this time")
+        raise Exception("Cannot send key at this time")
     else:
         key = server.reconstruct_key(client_id)
         if key:
@@ -118,10 +118,13 @@ def get_key(client_id: str):
 def send_file(client_id: str, file: UploadFile = File(...)):
     global phase
     if phase == 4:
-        server.receive_file(file)
-        return {
-            'filename': server.filename
-        }
+        if server.file_detail.owner_id == client_id:
+            server.receive_file(file)
+            return {
+                'filename': server.filename
+            }
+        else:
+            raise Exception("Only owner can send file")
     else:
         raise Exception("Cannot receive file at this time")
 
@@ -130,7 +133,7 @@ def send_file(client_id: str, file: UploadFile = File(...)):
 def download_file(client_id: str):
     global phase
     if phase == 4:
-        if client_id in server.client_ids:
+        if server._is_valid_client_id(client_id):
             return FileResponse(server.filename)
         else:
             raise Exception("Invalid client id")

@@ -48,7 +48,7 @@ class ServerHandler:
         self.key_reconstruction_phase.argtypes = [ctypes.POINTER(KeySharing)]
         self.key_reconstruction_phase.restype = (ctypes.c_char_p)
 
-        self.file_detail = {}
+        self.file_detail = None
 
         self.shares = []
         self.collected_shares = []
@@ -64,7 +64,7 @@ class ServerHandler:
         return client_id in self.client_received_shares
 
     def _has_sent_share(self,client_id):
-        return client_id in self.collected_shares
+        return client_id in self.client_sent_shares
 
     def _has_enough_shares(self):
         return len(self.collected_shares) >= self.file_detail.T
@@ -91,7 +91,10 @@ class ServerHandler:
                                                      ctypes.c_int(self.collected_shares[i].x))
                         key_component_array[i] = key_component
                     key_sharing.key_component = ctypes.cast(key_component_array, ctypes.POINTER(KeyComponent))
+                    # key = {}
                     key = self._reconstruct_key(key_sharing)
+                    # key["plain_file_path"] = self.file_detail.plain_file_path
+                    # key["cipher_file_path"] = self.file_detail.cipher_file_path
                     return key
                 else:
                     raise Exception("Insufficient shares to reconstruct")
@@ -205,7 +208,7 @@ class ServerHandler:
     def check_request_open(self, client_id):
         if self._is_valid_client_id(client_id):
             if self.file_detail.owner_id == client_id:
-                if len(self.shares) != 0:
+                if len(self.shares) == 0:
                     return True
                 else:
                     raise Exception("Shares have not been distributed yet")
