@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
-from server import ServerHandler
+from pvssfs.server import ServerHandler
 from pydantic import BaseModel
 
 app = FastAPI()

@@ -1,5 +1,5 @@
 import ctypes
-import config
+import pvssfs.config as config
 import hashlib
 import time
 

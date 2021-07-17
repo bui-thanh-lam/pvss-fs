@@ -1,6 +1,4 @@
 import os
-import sys
-sys.path.append('/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/src/')
 import pvssfs.config as config
 import requests
 import ctypes

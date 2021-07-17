@@ -55,7 +55,6 @@ class Ui_MainWindow():
 
 if __name__ == "__main__":
     import sys
-    sys.path.append('/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/src/')
     from pvssfs.client import ClientHandler
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
