@@ -1,5 +1,7 @@
 import os
-import config
+import sys
+sys.path.append('/home/lam-bui/Documents/Projects/ATTT/BTL/pvss-fs/src/')
+import pvssfs.config as config
 import requests
 import ctypes
 import json
@@ -95,7 +97,7 @@ class ClientHandler:
             AES_key["cipher_file_path"] = self._encrypt_key["cipher_file_path"]
             self._encrypt_key = None
             AES_key = json.dumps(AES_key)
-            r = requests.post(config.config["API_ENDPOINT"] + "send_key/", data=AES_key)
+            r = requests.post(config.CONFIG["API_ENDPOINT"] + "send_key/", data=AES_key)
             self._log(r)
 
     def get_share(self):
