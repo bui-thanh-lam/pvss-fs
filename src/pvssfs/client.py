@@ -134,6 +134,7 @@ class ClientHandler:
         if(self.__decrypt_key == None):
             print("You cannot send file")
         else:
+            file_name = os.path.basename(self.__decrypt_key["plain_file_path"])
             f = open(self.__decrypt_key["plain_file_path"], 'rb')
             r = requests.post(
                 config.CONFIG["API_ENDPOINT"] + "send_file/",
@@ -141,7 +142,7 @@ class ClientHandler:
                     'client_id': self.client_id
                 },
                 files={
-                    'file': ('test.txt', f, 'multipart/form-data'),
+                    'file': (file_name, f, 'multipart/form-data'),
                 }
             )
             self._log(r)
