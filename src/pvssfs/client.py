@@ -1,27 +1,17 @@
 import os
-import config
+import pvssfs.config as config
 import requests
 import ctypes
 import json
 
 
 class ClientHandler:
-    """ Handling all clients' behavior.
-
-    Methods:
-        encrypt_file(plain_file_path, cipher_file_path): encrypt a plain file
-        encrypt_file(cipher_file_path, plain_file_path, key): decrypt a cipher file
-
-    """
 
     def __init__(self):
-        self.client_id = requests.get(config.API_ENDPOINT + "get_client_id/").json()["client_id"]
-        if (self.client_id != None):
-            print("get client id successful")
-        else:
-            print('cannot get client id')
+        self._get_client_id()
+        
         # load lib
-        _path = os.path.join(config.CLIENT_LIB_PATH)
+        _path = os.path.join(config.CONFIG["CLIENT_LIB_PATH"])
         _mod = ctypes.cdll.LoadLibrary(_path)
 
         # char *Encrypt_File(char *input, char *output)
@@ -36,10 +26,23 @@ class ClientHandler:
 
         self.share = None
 
-        self.decrypt_key = None
-        self.encrypt_key = None
+        self.__decrypt_key = None
+        self.__encrypt_key = None
 
-    def encrypt_file(self, plain_file_path, cipher_file_path):
+    def _get_client_id(self):
+        r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_client_id/")
+        self._log(r)
+        self.client_id = r.json()["client_id"]
+        
+    def _log(self, r):
+        print(f"Response from server: {r.status_code}")
+
+
+    def encrypt_file(
+        self,
+        plain_file_path=config.CONFIG["TEST_DOCUMENT_PATH"], 
+        cipher_file_path=config.CONFIG["TEST_DECRYPTED_DOC_PATH"]
+    ):
         """Encrypt file by AES in CTR mode
 
             Args:
@@ -49,16 +52,16 @@ class ClientHandler:
             Return:
                 key (str): the aes key in hex code
         """
-        print("encrypting . . .")
+        print("Encrypting . . .")
         plain_file_path = ctypes.c_char_p(plain_file_path.encode("utf-8"))
         cipher_file_path = ctypes.c_char_p(cipher_file_path.encode("utf-8"))
         key = self.encryptor(plain_file_path, cipher_file_path).decode("utf-8")
-        print("encrypt successful")
-        self.encrypt_key = {}
-        self.encrypt_key["key"] = key
-        self.encrypt_key["plain_file_path"] = plain_file_path.value.decode("utf-8")
-        self.encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
-        os.remove(self.encrypt_key["plain_file_path"])
+        print("Finish encryption")
+        self.__encrypt_key = {}
+        self.__encrypt_key["key"] = key
+        self.__encrypt_key["plain_file_path"] = plain_file_path.value.decode("utf-8")
+        self.__encrypt_key["cipher_file_path"] = cipher_file_path.value.decode("utf-8")
+        os.remove(self.__encrypt_key["plain_file_path"])
 
     def decrypt_file(self):
         """Decrypt file by AES in CTR mode
@@ -68,83 +71,95 @@ class ClientHandler:
                 plain_file_path (str): the path to desired plain file after decryption
                 key (str): the a AES key in hex code
         """
-        if self.decrypt_key == None:
-            print("You do not have key")
+        if self.__decrypt_key == None:
+            print("You do not have the key to decrypt. Please send a open request to server to get the key.")
         else:
-            print("decrypting file . . . ")
-            cipher_file_path = ctypes.c_char_p(self.decrypt_key["cipher_file_path"].encode("utf-8"))
-            plain_file_path = ctypes.c_char_p(self.decrypt_key["plain_file_path"].encode("utf-8"))
-            key = ctypes.c_char_p(self.decrypt_key["key"].encode("utf-8"))
+            print("Decrypting file . . . ")
+            cipher_file_path = ctypes.c_char_p(self.__decrypt_key["cipher_file_path"].encode("utf-8"))
+            plain_file_path = ctypes.c_char_p(self.__decrypt_key["plain_file_path"].encode("utf-8"))
+            key = ctypes.c_char_p(self.__decrypt_key["key"].encode("utf-8"))
             self.decryptor(cipher_file_path, plain_file_path, key)
-            print("decrypt successful")
+            print("Finish decryption")
+            os.remove(self.__decrypt_key["cipher_file_path"])
 
     def send_key(self):
-        if self.encrypt_key == None:
-            print("You do not have key to send")
+        if self.__encrypt_key == None:
+            print("You do not have a key to send. Please encrypt your file first.")
         else:
             AES_key = {}
-            AES_key["key"] = self.encrypt_key["key"]
+            AES_key["key"] = self.__encrypt_key["key"]
             AES_key["client_id"] = str(self.client_id)
-            AES_key["plain_file_path"] = self.encrypt_key["plain_file_path"]
-            AES_key["cipher_file_path"] = self.encrypt_key["cipher_file_path"]
-            self.encrypt_key = None
+            AES_key["plain_file_path"] = self.__encrypt_key["plain_file_path"]
+            AES_key["cipher_file_path"] = self.__encrypt_key["cipher_file_path"]
+            self.__encrypt_key = None
             AES_key = json.dumps(AES_key)
-            r = requests.post(config.API_ENDPOINT + "send_key/", data=AES_key)
-            print(r.json())
+            r = requests.post(config.CONFIG["API_ENDPOINT"] + "send_key/", data=AES_key)
+            self._log(r)
 
     def get_share(self):
-        r = requests.get(config.API_ENDPOINT + "get_share/", params={'client_id': self.client_id})
-        if r.json() != None:
+        r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_share/", params={'client_id': self.client_id})
+        self._log(r) 
+        try:
             self.share = r.json()
-            print("get share successful")
-        else:
-            print("cannot get share")
-
+        except json.decoder.JSONDecodeError as e:
+            raise e
+            
     def send_share(self):
         if self.share == None:
-            print("You have not received the share")
+            print("You have not received your share yet. Please get your share from server first.")
         else:
-            self.share["client_id"] = self.client_id
+            share = self.share
+            share["client_id"] = self.client_id
             share = json.dumps(self.share)
-            r = requests.post(config.API_ENDPOINT + "send_share/", data=share)
-            print(r.json())
+            r = requests.post(config.CONFIG["API_ENDPOINT"] + "send_share/", data=share)
+            self._log(r) 
 
     def request_open(self):
-        r = requests.get(config.API_ENDPOINT + "request_open/", params={'client_id': self.client_id})
-        print(r.json())
+        if self.share is None:
+            print("You or other shareholders have not received your/their share yet. Please wait util all shareholders have received their share.")
+        else:
+            r = requests.post(
+                config.CONFIG["API_ENDPOINT"] + "request_open/", 
+                params={
+                    'client_id': self.client_id
+                }
+            )
+            self._log(r)
 
-    def send_file(self, file_path=config.TEST_DOCUMENT_PATH):
-        f = open(file_path, 'rb')
-        requests.post(
-            config.API_ENDPOINT + "send_file/",
+    def send_file(self):
+        if(self.__decrypt_key == None):
+            print("You cannot send file")
+        else:
+            file_name = os.path.basename(self.__decrypt_key["plain_file_path"])
+            f = open(self.__decrypt_key["plain_file_path"], 'rb')
+            r = requests.post(
+                config.CONFIG["API_ENDPOINT"] + "send_file/",
+                params={
+                    'client_id': self.client_id
+                },
+                files={
+                    'file': (file_name, f, 'multipart/form-data'),
+                }
+            )
+            self._log(r)
+
+    def download_file(self, path):
+        r = requests.get(
+            config.CONFIG["API_ENDPOINT"] + "download_file/",
             params={
                 'client_id': self.client_id
-            },
-            files={
-                'file': ('test.txt', f, 'multipart/form-data'),
             }
         )
-
-    def download_file(self):
-        response = requests.get(
-            config.API_ENDPOINT + "download_file/",
-            params={
-                'client_id': self.client_id
-            }
-        )
-        print(response.content.decode("utf-8"))
+        path = path + self.client_id[0:10] + "_" + self.share["file_name"]
+        with open(path, 'wb+') as f:
+            f.write(r.content)
+            f.close()
+        # print(r.content.decode('utf8'))
 
     def get_key(self):
-        r = requests.get(config.API_ENDPOINT + "get_key/", params={'client_id': self.client_id})
-        resp = r.json()
-        if resp["status_code"] == 100:
-            print("client id is not exist")
-        elif resp["status_code"] == 200:
-            print("client id is not owner")
-        elif resp["status_code"] == 300:
-            print("do not collect enough share")
-        elif resp["status_code"] == 500:
-            print("not the time to reconstruct key")
-        else:
-            print("get key successful")
-            self.decrypt_key = resp
+        r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_key/", params={'client_id': self.client_id})
+        self._log(r)      
+        try:
+            self.__decrypt_key = r.json()
+        except json.decoder.JSONDecodeError as e:
+            raise e
