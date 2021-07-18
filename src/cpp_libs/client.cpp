@@ -1,4 +1,4 @@
-// g++ -fPIC -shared -o Client_Lib.so client.cpp
+// g++ -fPIC -shared -o Client_Lib.so client.cpp -lgmp
 
 #include <iostream>
 #include <string.h>
