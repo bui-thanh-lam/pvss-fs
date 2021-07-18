@@ -143,14 +143,17 @@ class ClientHandler:
             )
             self._log(r)
 
-    def download_file(self):
+    def download_file(self, path):
         r = requests.get(
             config.CONFIG["API_ENDPOINT"] + "download_file/",
             params={
                 'client_id': self.client_id
             }
         )
-        print(f"Downloaded file: {r.content}")
+        with open(path, 'w+') as f:
+            f.write(str(r.content))
+            f.close()
+        # print(r.content.decode('utf8'))
 
     def get_key(self):
         r = requests.get(config.CONFIG["API_ENDPOINT"] + "get_key/", params={'client_id': self.client_id})

@@ -14,56 +14,55 @@ class Ui_MainWindow():
        
     def setupUi(self, MainWindow):
         self.client = ClientHandler()
-        MainWindow.setObjectName("Secret File Sharing App")
+        MainWindow.setObjectName("MainWindow")
         MainWindow.resize(438, 268)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.encrypt_button = QtWidgets.QPushButton(self.centralwidget)
-        self.encrypt_button.setGeometry(QtCore.QRect(280, 20, 89, 25))
-        self.encrypt_button.setObjectName("encrypt_button")
+        self.encryptButton = QtWidgets.QPushButton(self.centralwidget)
+        self.encryptButton.setEnabled(False)
+        self.encryptButton.setGeometry(QtCore.QRect(280, 20, 89, 25))
+        self.encryptButton.setObjectName("encryptButton")
         self.fileNameLabel = QtWidgets.QLabel(self.centralwidget)
-        self.fileNameLabel.setGeometry(QtCore.QRect(20, 20, 131, 31))
+        self.fileNameLabel.setGeometry(QtCore.QRect(20, 80, 131, 31))
         self.fileNameLabel.setObjectName("fileNameLabel")
         self.getShareButton = QtWidgets.QPushButton(self.centralwidget)
         self.getShareButton.setGeometry(QtCore.QRect(218, 60, 151, 25))
         self.getShareButton.setObjectName("getShareButton")
         self.requestOpenButton = QtWidgets.QPushButton(self.centralwidget)
+        self.requestOpenButton.setEnabled(False)
         self.requestOpenButton.setGeometry(QtCore.QRect(258, 100, 111, 25))
         self.requestOpenButton.setObjectName("requestOpenButton")
         self.sendShareButton = QtWidgets.QPushButton(self.centralwidget)
+        self.sendShareButton.setEnabled(False)
         self.sendShareButton.setGeometry(QtCore.QRect(218, 140, 151, 25))
         self.sendShareButton.setObjectName("sendShareButton")
         self.decryptButton = QtWidgets.QPushButton(self.centralwidget)
+        self.decryptButton.setEnabled(False)
         self.decryptButton.setGeometry(QtCore.QRect(280, 180, 89, 25))
         self.decryptButton.setObjectName("decryptButton")
         self.shareFileButton = QtWidgets.QPushButton(self.centralwidget)
-        self.shareFileButton.setGeometry(QtCore.QRect(40, 110, 89, 25))
+        self.shareFileButton.setEnabled(False)
+        self.shareFileButton.setGeometry(QtCore.QRect(280, 220, 89, 25))
         self.shareFileButton.setObjectName("shareFileButton")
         self.downloadFileButton = QtWidgets.QPushButton(self.centralwidget)
+        self.downloadFileButton.setEnabled(False)
         self.downloadFileButton.setGeometry(QtCore.QRect(40, 160, 89, 25))
         self.downloadFileButton.setObjectName("downloadFileButton")
+        self.openFileButton = QtWidgets.QPushButton(self.centralwidget)
+        self.openFileButton.setGeometry(QtCore.QRect(40, 50, 89, 25))
+        self.openFileButton.setObjectName("openFileButton")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 438, 23))
-        self.menubar.setObjectName("menubar")
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setSizeGripEnabled(True)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionBrowse = QtWidgets.QAction(MainWindow)
-        self.actionBrowse.setObjectName("actionBrowse")
-        self.menuFile.addAction(self.actionBrowse)
-        self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         # Add event listeners
-        self.actionBrowse.triggered.connect(self._browse_file)
-        self.encrypt_button.clicked.connect(self._encrypt_and_send_key)
+        self.openFileButton.clicked.connect(self._browse_file)
+        self.encryptButton.clicked.connect(self._encrypt_and_send_key)
         self.getShareButton.clicked.connect(self._get_share)
         self.requestOpenButton.clicked.connect(self._request_open)
         self.sendShareButton.clicked.connect(self._send_share)
@@ -73,45 +72,61 @@ class Ui_MainWindow():
     
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.encrypt_button.setText(_translate("MainWindow", "Mã hóa file"))
+        MainWindow.setWindowTitle(_translate("MainWindow", self.client.client_id))
+        self.encryptButton.setText(_translate("MainWindow", "Mã hóa file"))
         self.fileNameLabel.setText(_translate("MainWindow", "Tệp tin được chọn"))
         self.getShareButton.setText(_translate("MainWindow", "Nhận key thành phần"))
         self.requestOpenButton.setText(_translate("MainWindow", "Yêu cầu mở file"))
         self.sendShareButton.setText(_translate("MainWindow", "Gửi key thành phần"))
         self.decryptButton.setText(_translate("MainWindow", "Giải mã file"))
         self.shareFileButton.setText(_translate("MainWindow", "Chia sẻ file"))
-        self.downloadFileButton.setText(_translate("MainWindow", "Tải xuống"))
-        self.menuFile.setTitle(_translate("MainWindow", "Tệp tin"))
-        self.actionBrowse.setText(_translate("MainWindow", "Mở..."))
-        
-    def _encrypt_and_send_key(self):
-        self.client.encrypt_file(self.filename)
-        self.client.send_key()
+        self.downloadFileButton.setText(_translate("MainWindow", "Tải xuống..."))
+        self.openFileButton.setText(_translate("MainWindow", "Chọn file..."))
         
     def _browse_file(self):
         fname = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, 'Open file')
-        self.filename = fname[0]
-        self.fileNameLabel.setText(self.filename.split('/')[-1])
+        self.file_path = fname[0]
+        self.filename = self.file_path.split('/')[-1]
+        self.fileNameLabel.setText(self.filename)
+        self.encryptButton.setEnabled(True)
+        self.openFileButton.setEnabled(False)
+        
+    def _encrypt_and_send_key(self):
+        self.client.encrypt_file(self.file_path)
+        self.client.send_key()
+        self.encryptButton.setEnabled(False)
         
     def _get_share(self):
         self.client.get_share()
+        self.getShareButton.setEnabled(False)
+        self.requestOpenButton.setEnabled(True)
     
     def _request_open(self):
         self.client.request_open()
+        self.requestOpenButton.setEnabled(False)
+        self.sendShareButton.setEnabled(True)
         
     def _send_share(self):
         self.client.send_share()
+        self.sendShareButton.setEnabled(False)
+        self.decryptButton.setEnabled(True)
     
     def _get_key_and_decrypt_file(self):
         self.client.get_key()
         self.client.decrypt_file()
+        self.decryptButton.setEnabled(False)
+        self.shareFileButton.setEnabled(True)
+        self.downloadFileButton.setEnabled(True)
         
     def _send_file(self):
         self.client.send_file()
+        self.shareFileButton.setEnabled(False)
         
     def _download_file(self):
-        self.client.download_file()
+        download_path = QtWidgets.QFileDialog.getExistingDirectory(self.centralwidget, 'Open file')
+        download_path = download_path + self.filename
+        self.client.download_file(download_path)
+        
 
 if __name__ == "__main__":
     import sys
