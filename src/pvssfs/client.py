@@ -150,7 +150,7 @@ class ClientHandler:
                 'client_id': self.client_id
             }
         )
-        path += self.share["file_name"]
+        path = path + self.client_id[0:10] + "_" + self.share["file_name"]
         with open(path, 'wb+') as f:
             f.write(r.content)
             f.close()
