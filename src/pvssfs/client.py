@@ -35,10 +35,7 @@ class ClientHandler:
         self.client_id = r.json()["client_id"]
         
     def _log(self, r):
-        try:
-            print(f"Response from server: {r.json()}")
-        except json.decoder.JSONDecodeError:
-            print(f"Response from server: {r}")
+        print(f"Response from server: {r.status_code}")
 
 
     def encrypt_file(
@@ -78,7 +75,6 @@ class ClientHandler:
             print("You do not have the key to decrypt. Please send a open request to server to get the key.")
         else:
             print("Decrypting file . . . ")
-            print(self.__decrypt_key)
             cipher_file_path = ctypes.c_char_p(self.__decrypt_key["cipher_file_path"].encode("utf-8"))
             plain_file_path = ctypes.c_char_p(self.__decrypt_key["plain_file_path"].encode("utf-8"))
             key = ctypes.c_char_p(self.__decrypt_key["key"].encode("utf-8"))
