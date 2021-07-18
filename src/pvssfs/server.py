@@ -123,7 +123,7 @@ class ServerHandler:
             S = AES_key.key
             S = ctypes.c_char_p(S.encode("utf-8"))
             N = ctypes.c_int(self.n_clients)
-            T = int(self.n_clients*threshold)
+            T = int((self.n_clients+1)*threshold)
             T = ctypes.c_int(T)
 
             key_sharing = self.key_sharing_phase(S, N, T)

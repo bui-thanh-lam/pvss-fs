@@ -13,6 +13,7 @@ from PyQt5 import QtCore, QtWidgets
 class Ui_MainWindow():
        
     def setupUi(self, MainWindow):
+        self.client = ClientHandler()
         MainWindow.setObjectName("Secret File Sharing App")
         MainWindow.resize(438, 268)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -89,7 +90,6 @@ class Ui_MainWindow():
         self.client.send_key()
         
     def _browse_file(self):
-        self.client = ClientHandler()
         fname = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, 'Open file')
         self.filename = fname[0]
         self.fileNameLabel.setText(self.filename.split('/')[-1])

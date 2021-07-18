@@ -133,3 +133,4 @@ dmypy.json
 
 # config.py
 test/
+src/pvssfs/config.py
