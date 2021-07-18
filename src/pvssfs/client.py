@@ -150,8 +150,9 @@ class ClientHandler:
                 'client_id': self.client_id
             }
         )
-        with open(path, 'w+') as f:
-            f.write(str(r.content))
+        path += self.share["file_name"]
+        with open(path, 'wb+') as f:
+            f.write(r.content)
             f.close()
         # print(r.content.decode('utf8'))
 

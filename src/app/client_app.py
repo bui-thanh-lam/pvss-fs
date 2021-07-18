@@ -56,6 +56,7 @@ class Ui_MainWindow():
         self.statusbar.setSizeGripEnabled(True)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.filename = "test.txt"
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -89,8 +90,7 @@ class Ui_MainWindow():
         self.filename = self.file_path.split('/')[-1]
         self.fileNameLabel.setText(self.filename)
         self.encryptButton.setEnabled(True)
-        self.openFileButton.setEnabled(False)
-        
+
     def _encrypt_and_send_key(self):
         self.client.encrypt_file(self.file_path)
         self.client.send_key()
@@ -100,6 +100,8 @@ class Ui_MainWindow():
         self.client.get_share()
         self.getShareButton.setEnabled(False)
         self.requestOpenButton.setEnabled(True)
+        self.sendShareButton.setEnabled(True)
+        self.downloadFileButton.setEnabled(True)
     
     def _request_open(self):
         self.client.request_open()
@@ -116,15 +118,14 @@ class Ui_MainWindow():
         self.client.decrypt_file()
         self.decryptButton.setEnabled(False)
         self.shareFileButton.setEnabled(True)
-        self.downloadFileButton.setEnabled(True)
-        
+
     def _send_file(self):
         self.client.send_file()
         self.shareFileButton.setEnabled(False)
         
     def _download_file(self):
         download_path = QtWidgets.QFileDialog.getExistingDirectory(self.centralwidget, 'Open file')
-        download_path = download_path + self.filename
+        download_path = download_path +"/"
         self.client.download_file(download_path)
         
 

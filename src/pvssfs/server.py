@@ -1,4 +1,6 @@
 import ctypes
+import os.path
+
 import pvssfs.config as config
 import hashlib
 import time
@@ -200,6 +202,7 @@ class ServerHandler:
                 raise Exception("This client has already received his share")
             else:
                 share = self.shares.pop(0)
+                share["file_name"] = os.path.basename(self.file_detail.plain_file_path)
                 self.client_received_shares.append(client_id)
                 return share
         else:
